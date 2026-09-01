@@ -1,0 +1,1936 @@
+<title>Job Search Tracker</title>
+
+<style>
+:root {
+  color-scheme: light;
+  --surface:      #fcfcfb;
+  --plane:        #f9f9f7;
+  --ink:          #0b0b0b;
+  --ink-2:        #52514e;
+  --ink-mute:     #898781;
+  --grid:         #e1e0d9;
+  --axis:         #c3c2b7;
+  --hairline:     rgba(11,11,11,0.10);
+  --series-1:     #2a78d6;
+  --ord-1:        #86b6ef;
+  --ord-2:        #5598e7;
+  --ord-3:        #3987e5;
+  --ord-4:        #2a78d6;
+  --ord-5:        #256abf;
+  --ord-6:        #184f95;
+  --ord-7:        #0d366b;
+  --good:         #0ca30c;
+  --warning:      #fab219;
+  --serious:      #ec835a;
+  --critical:     #d03b3b;
+  --good-ink:     #006300;
+  --shadow:       0 1px 2px rgba(11,11,11,.05), 0 1px 1px rgba(11,11,11,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface: #1a1a19; --plane: #0d0d0d; --ink: #ffffff; --ink-2: #c3c2b7;
+    --ink-mute: #898781; --grid: #2c2c2a; --axis: #383835;
+    --hairline: rgba(255,255,255,0.10); --series-1: #3987e5;
+    --ord-1: #184f95; --ord-2: #256abf; --ord-3: #2a78d6; --ord-4: #3987e5;
+    --ord-5: #5598e7; --ord-6: #86b6ef; --ord-7: #b7d3f6;
+    --good-ink: #0ca30c; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #1a1a19; --plane: #0d0d0d; --ink: #ffffff; --ink-2: #c3c2b7;
+  --ink-mute: #898781; --grid: #2c2c2a; --axis: #383835;
+  --hairline: rgba(255,255,255,0.10); --series-1: #3987e5;
+  --ord-1: #184f95; --ord-2: #256abf; --ord-3: #2a78d6; --ord-4: #3987e5;
+  --ord-5: #5598e7; --ord-6: #86b6ef; --ord-7: #b7d3f6;
+  --good-ink: #0ca30c; --shadow: none;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--plane); color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+}
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px 96px; }
+
+/* provenance */
+.prov { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--hairline); }
+.prov-inner { max-width: 1180px; margin: 0 auto; padding: 10px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; }
+.prov-badge { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; letter-spacing: .02em; padding: 3px 9px; border-radius: 3px; background: var(--plane); border: 1px solid var(--hairline); color: var(--ink-2); }
+.prov-badge.is-good { border-color: var(--good); color: var(--ink); }
+.prov-badge.is-warn { border-color: var(--warning); color: var(--ink); }
+.prov-badge.is-crit { border-color: var(--critical); color: var(--ink); }
+.prov-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-mute); flex: none; }
+.is-good .prov-dot { background: var(--good); }
+.is-warn .prov-dot { background: var(--warning); }
+.is-crit .prov-dot { background: var(--critical); }
+.prov-fact { font-size: 12.5px; color: var(--ink-2); display: flex; gap: 6px; align-items: baseline; }
+.prov-fact b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.prov-spacer { flex: 1 1 auto; }
+
+header.mast { padding: 40px 0 8px; }
+header.mast h1 { margin: 0; font-size: 30px; line-height: 1.15; letter-spacing: -0.02em; font-weight: 640; text-wrap: balance; }
+header.mast p.sub { margin: 10px 0 0; color: var(--ink-2); max-width: 68ch; font-size: 14.5px; }
+
+nav.jump { display: flex; flex-wrap: wrap; gap: 6px; margin: 24px 0 8px; border-bottom: 1px solid var(--grid); }
+nav.jump a { font-size: 13px; font-weight: 550; color: var(--ink-2); text-decoration: none; padding: 8px 12px; border-bottom: 2px solid transparent; margin-bottom: -1px; border-radius: 3px 3px 0 0; }
+nav.jump a:hover { color: var(--ink); background: var(--surface); }
+
+section.band { padding-top: 44px; scroll-margin-top: 60px; }
+section.band > h2 { margin: 0 0 4px; font-size: 12px; font-weight: 680; letter-spacing: .10em; text-transform: uppercase; color: var(--ink-mute); }
+section.band > p.lede { margin: 0 0 22px; font-size: 18px; line-height: 1.4; letter-spacing: -0.01em; color: var(--ink); max-width: 62ch; text-wrap: balance; }
+
+.card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 6px; padding: 20px 22px 22px; box-shadow: var(--shadow); margin-bottom: 18px; }
+.card > h3 { margin: 0 0 3px; font-size: 15.5px; font-weight: 630; letter-spacing: -0.005em; }
+.card > p.note { margin: 0 0 18px; font-size: 13px; color: var(--ink-2); max-width: 72ch; }
+.card > p.note:last-child { margin-bottom: 0; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.tile { background: var(--surface); border: 1px solid var(--hairline); border-radius: 6px; padding: 16px 18px 17px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 2px; }
+.tile .k { font-size: 11.5px; font-weight: 640; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-mute); }
+.tile .v { font-size: 32px; font-weight: 620; letter-spacing: -0.025em; line-height: 1.1; }
+.tile .d { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; }
+.tile.accent { border-left: 3px solid var(--series-1); }
+.tile.crit { border-left: 3px solid var(--critical); }
+.tile.good { border-left: 3px solid var(--good); }
+
+/* action list */
+.acts { display: flex; flex-direction: column; gap: 10px; }
+.act { border: 1px solid var(--hairline); border-left: 3px solid var(--axis); border-radius: 5px; padding: 13px 16px 14px; background: var(--surface); }
+.act.urgent { border-left-color: var(--critical); }
+.act.call   { border-left-color: var(--good); }
+.act-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin-bottom: 3px; }
+.act-co { font-size: 15px; font-weight: 630; letter-spacing: -0.005em; }
+.act-role { font-size: 13.5px; color: var(--ink-2); }
+.act-body { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+.act-body.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.act-more { font: inherit; font-size: 12.5px; background: none; border: none; padding: 4px 0 0; color: var(--series-1); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+
+/* bars */
+.bars { display: flex; flex-direction: column; gap: 2px; }
+.barrow { display: grid; grid-template-columns: minmax(120px, 200px) 1fr auto; align-items: center; gap: 14px; padding: 5px 6px; border-radius: 4px; }
+.barrow:hover { background: var(--plane); }
+.barrow .lab { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.barrow .lab .sub { color: var(--ink-mute); font-size: 12px; }
+.bartrack { height: 11px; background: var(--grid); border-radius: 2px; overflow: hidden; min-width: 40px; }
+.barfill { height: 100%; background: var(--series-1); border-radius: 0 3px 3px 0; min-width: 2px; }
+.barrow .val { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; min-width: 92px; }
+.barrow .val em { font-style: normal; font-weight: 400; color: var(--ink-mute); }
+
+.stack { display: flex; gap: 2px; height: 13px; border-radius: 2px; overflow: hidden; }
+.stack > span { display: block; min-width: 2px; }
+.seg-yes { background: var(--good); }
+.seg-no { background: var(--critical); }
+.seg-unclear { background: var(--axis); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 16px; padding: 0; list-style: none; }
+.legend li { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-2); }
+.swatch { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+
+.funnel { display: flex; flex-direction: column; gap: 2px; }
+.fstage { display: grid; grid-template-columns: 132px 1fr auto; align-items: center; gap: 14px; padding: 5px 6px; border-radius: 4px; }
+.fstage:hover { background: var(--plane); }
+.fbar { height: 15px; border-radius: 2px; min-width: 2px; }
+.fstage .val { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; }
+
+/* repeats */
+.repeat { display: flex; flex-direction: column; gap: 2px; }
+.rep-item > summary { display: grid; grid-template-columns: minmax(140px, 230px) 1fr auto auto; align-items: center; gap: 14px; padding: 7px 8px; cursor: pointer; border-radius: 4px; list-style: none; }
+.rep-item > summary::-webkit-details-marker { display: none; }
+.rep-item > summary:hover, .rep-item[open] > summary { background: var(--plane); }
+.rep-name { font-size: 13.5px; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rep-count { font-size: 13px; font-weight: 620; font-variant-numeric: tabular-nums; min-width: 74px; text-align: right; }
+.rep-count em { font-style: normal; font-weight: 400; color: var(--ink-mute); font-size: 12px; }
+.rep-detail { padding: 4px 8px 12px; }
+.rep-detail table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.rep-detail td { padding: 4px 10px 4px 0; border-top: 1px solid var(--grid); color: var(--ink-2); vertical-align: top; }
+.rep-detail td:first-child { color: var(--ink); white-space: nowrap; }
+
+.flag { font-size: 10.5px; font-weight: 680; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; white-space: nowrap; border: 1px solid var(--critical); }
+.flag.quiet { border-color: var(--hairline); color: var(--ink-mute); }
+.flag.hist { border-color: var(--warning); }
+
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 3px; border: 1px solid var(--hairline); color: var(--ink-2); white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+.pill.s-interviewing, .pill.s-offer { border-color: var(--good); color: var(--good-ink); }
+.pill.s-screening, .pill.s-replied { border-color: var(--series-1); color: var(--series-1); }
+.pill.s-needsyou { border-color: var(--critical); color: var(--critical); }
+.pill.s-closed, .pill.s-lead, .pill.s-offcriteria, .pill.s-paused { border-color: var(--hairline); color: var(--ink-mute); }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--hairline); border-radius: 6px; background: var(--surface); }
+table.data { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 820px; }
+table.data th { text-align: left; font-size: 11px; font-weight: 680; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-mute); padding: 10px 12px; border-bottom: 1px solid var(--axis); position: sticky; top: 0; background: var(--surface); white-space: nowrap; }
+table.data th.sortable { cursor: pointer; user-select: none; }
+table.data th.sortable:hover { color: var(--ink); }
+table.data th .arrow { opacity: .45; font-size: 10px; }
+table.data td { padding: 9px 12px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+table.data tr:last-child td { border-bottom: none; }
+table.data tbody tr:hover { background: var(--plane); }
+td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+td.date { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-2); }
+td.co { font-weight: 550; }
+td.wide { min-width: 260px; max-width: 460px; font-size: 12.5px; color: var(--ink-2); }
+a.thread { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; color: var(--series-1); text-decoration: none; border-bottom: 1px solid transparent; }
+a.thread:hover { border-bottom-color: var(--series-1); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+input[type="search"], select { font: inherit; font-size: 13.5px; padding: 7px 10px; border: 1px solid var(--axis); border-radius: 4px; background: var(--surface); color: var(--ink); }
+input[type="search"] { min-width: 240px; flex: 1 1 240px; max-width: 380px; }
+label.ctl { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-2); }
+.count-note { font-size: 12.5px; color: var(--ink-mute); font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
+
+.state { border: 1px solid var(--hairline); border-left: 3px solid var(--ink-mute); border-radius: 6px; background: var(--surface); padding: 16px 18px; margin-bottom: 18px; }
+.state.warn { border-left-color: var(--warning); }
+.state h3 { margin: 0 0 5px; font-size: 14.5px; font-weight: 630; }
+.state p { margin: 0; font-size: 13.5px; color: var(--ink-2); max-width: 76ch; }
+.empty { font-size: 13.5px; color: var(--ink-mute); padding: 8px 6px; }
+.hidden { display: none !important; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+footer.foot { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--grid); font-size: 12.5px; color: var(--ink-mute); max-width: 76ch; }
+footer.foot p { margin: 0 0 8px; }
+
+/* ── review controls (artifact capability) ─────────────────────────────── */
+.rev { display:flex; flex-direction:column; gap:4px; min-width:150px; }
+.rev select, .rev input {
+  font: inherit; font-size:11px; padding:3px 5px; border-radius:5px;
+  border:1px solid var(--grid); background:var(--surface); color:var(--ink);
+  width:100%; max-width:180px;
+}
+.rev select:focus-visible, .rev input:focus-visible { outline:2px solid var(--series-1); outline-offset:1px; }
+.rev.dirty select, .rev.dirty input { border-color:var(--series-1); }
+tr.edited { background:color-mix(in srgb, var(--series-1) 7%, transparent); }
+.pill.proposed { background:transparent; border:1px dashed var(--series-1); color:var(--series-1); }
+.arrow-to { color:var(--ink-mute); font-size:11px; padding:0 3px; }
+.savebar {
+  position:sticky; bottom:0; z-index:20; display:flex; align-items:center; gap:12px;
+  flex-wrap:wrap; padding:10px 14px; margin-top:14px; border-radius:10px;
+  border:1px solid var(--grid); background:var(--plane); box-shadow:var(--shadow);
+}
+.savebar[hidden] { display:none; }
+.savebar .grow { flex:1 1 auto; }
+.savebar b { color:var(--ink); }
+.savebar button {
+  font:inherit; font-size:12px; font-weight:600; padding:6px 14px; border-radius:6px;
+  border:1px solid transparent; background:var(--series-1); color:#fff; cursor:pointer;
+}
+.savebar button.ghost { background:transparent; border-color:var(--grid); color:var(--ink-2); }
+.savebar button[disabled] { opacity:.5; cursor:default; }
+.savemsg { font-size:12px; color:var(--ink-2); }
+.savemsg.bad { color:var(--critical); }
+.savemsg.ok  { color:var(--good-ink); }
+.ro-note {
+  margin:10px 0 0; padding:9px 12px; border-radius:8px; font-size:12px;
+  border:1px solid var(--grid); background:var(--plane); color:var(--ink-2);
+}
+.ro-note[hidden] { display:none; }
+</style>
+
+<div class="prov">
+  <div class="prov-inner">
+    <span class="prov-badge is-good"><span class="prov-dot"></span>pipeline.md</span>
+    <span class="prov-fact"><b id="rowCount">—</b> rows</span>
+    <span class="prov-fact">last swept <b id="sweptDate">—</b></span>
+    <span class="prov-spacer"></span>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>Job Search Tracker</h1>
+    <p class="sub">Built from the ledger — <span class="mono">pipeline.md</span>, <span class="mono">pipeline-leads.md</span> and <span class="mono">pipeline-archive.md</span> — baked in at publish time.</p>
+  </header>
+
+  <nav class="jump">
+    <a href="#now">Needs you</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#effort">Return on effort</a>
+    <a href="#leads">Leads</a>
+    <a href="#archive">Everything</a>
+  </nav>
+
+  <main>
+    <section class="band" id="now">
+      <h2>01 — Owed by you</h2>
+      <p class="lede">Rows the ledger has flagged as needing a decision, a reply, or a call — before anything else on this page.</p>
+      <div class="tiles" id="tiles"></div>
+      <div class="acts" id="actionList"></div>
+    </section>
+
+    <section class="band" id="pipeline">
+      <h2>02 — Pipeline</h2>
+      <p class="lede">Where everything sits, and what each live row is waiting on.</p>
+
+      <div class="card">
+        <h3>By stage</h3>
+        <p class="note">Stages come straight from the ledger. <strong>Needs you</strong> collects rows the sweep marked as blocked on a decision of yours.</p>
+        <div class="funnel" id="funnel"></div>
+      </div>
+
+      <div class="card">
+        <h3>Live rows and their next action</h3>
+        <p class="note">Everything not closed, not off-criteria, and not a lead — ordered by stage. The <strong>next action</strong> column is the ledger's own text, trimmed of formatting.</p>
+        <div class="tablewrap"><table class="data" id="liveTable"></table></div>
+        <p class="ro-note" id="roNote" hidden></p>
+        <div class="savebar" id="saveBar" hidden>
+          <span class="grow"><b id="dirtyCount">0</b> unsaved change(s) &mdash; these are <em>proposals</em>. The ledger is still the source of truth.</span>
+          <span class="savemsg" id="saveMsg"></span>
+          <button type="button" class="ghost" id="discardBtn">Discard</button>
+          <button type="button" id="saveBtn">Save to artifact</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="effort">
+      <h2>03 — Return on effort</h2>
+      <p class="lede">Which sources produce a human, and which companies have received more applications than they've ever answered.</p>
+
+      <div class="card">
+        <h3>Companies applied to more than once</h3>
+        <p class="note">Counted across all three ledger files, grouping names after normalizing legal suffixes and parentheticals. <strong>These numbers undercount and are meant to.</strong> The ledger holds what was tracked; the real repeat check is a Gmail search for <span class="mono">in:anywhere "&lt;company&gt;"</span>, which covers every application ever made. A company showing twice here may have been applied to ten times.</p>
+        <div class="repeat" id="repeatList"></div>
+      </div>
+
+      <div class="card">
+        <h3>Sources that reach a human</h3>
+        <p class="note"><strong>Reached a human</strong> means the row got past submitted — a reply, a screen, an interview, or a rejection someone actually sent. A row that simply went quiet did not. Sources with fewer than 3 rows are folded into “Other”.</p>
+        <div class="bars" id="sourceBars"></div>
+      </div>
+
+      <div class="card">
+        <h3>On-criteria drift</h3>
+        <p class="note">The ledger files off-criteria submissions into their own section rather than tagging them per row, so this is a count of what the automated applicants sent that you would not have chosen.</p>
+        <ul class="legend">
+          <li><span class="swatch seg-yes"></span> On criteria</li>
+          <li><span class="swatch seg-no"></span> Off criteria</li>
+        </ul>
+        <div class="bars" id="criteriaBars"></div>
+      </div>
+    </section>
+
+    <section class="band" id="leads">
+      <h2>04 — Leads</h2>
+      <p class="lede">Postings mined from digests and never acted on. Identified, not applied to.</p>
+      <div class="card">
+        <div class="controls">
+          <input type="search" id="leadQ" placeholder="Search leads…" aria-label="Search leads">
+          <label class="ctl">Comp <select id="leadComp">
+            <option value="">Any</option>
+            <option value="band">Published a band</option>
+            <option value="inband">Inside $120K–$185K</option>
+            <option value="above">Above $185K</option>
+            <option value="under">Below $120K</option>
+          </select></label>
+          <label class="ctl"><input type="checkbox" id="leadLocal"> {{METRO}} only</label>
+          <span class="count-note" id="leadCount"></span>
+        </div>
+        <div class="tablewrap"><table class="data" id="leadTable"></table></div>
+      </div>
+    </section>
+
+    <section class="band" id="archive">
+      <h2>05 — Everything</h2>
+      <p class="lede">All {{N}} ledger rows, searchable, each linked back to its Gmail thread.</p>
+      <div class="card">
+        <div class="controls">
+          <input type="search" id="q" placeholder="Search company, role, notes…" aria-label="Search all rows">
+          <label class="ctl">Section <select id="fSection"><option value="">All</option></select></label>
+          <label class="ctl">Stage <select id="fStage"><option value="">All</option></select></label>
+          <span class="count-note" id="archiveCount"></span>
+        </div>
+        <div class="tablewrap"><table class="data" id="archiveTable"></table></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p><strong>Primary source.</strong> <span class="mono">Job Search/pipeline.md</span>, extracted at publish time by <span class="mono">Dashboards/build-data.mjs</span>. Nothing here is fetched at load, so the page is exactly as current as the last publish — the date in the strip above is the ledger's own last-swept date, not this page's.</p>
+    <p><strong>One source, three files.</strong> The ledger was split on 2026-08-06 when <span class="mono">pipeline.md</span> passed 292KB and stopped being readable in one pass. <span class="mono">pipeline.md</span> holds live work, <span class="mono">pipeline-leads.md</span> the un-worked backlog, <span class="mono">pipeline-archive.md</span> the closed rows and sweep history. All three are parsed here; the row count is the check that none of them dropped out.</p>
+    <p><strong>Repeat counts are ledger-only, and they undercount.</strong> A second layer used to read the Google Sheet archive for all-time counts through the Drive connector. <strong>That was retired on 2026-08-06 and the code is gone</strong> — the sheet is a lagging archive that no sweep reads or writes. To check whether a company is a genuine repeat, search Gmail for <span class="mono">in:anywhere "&lt;company&gt;"</span>; that covers every application ever made and cannot go stale.</p>
+  </footer>
+</div>
+
+<script type="text/plain" id="__TPL__"><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Job Search Tracker</title><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style></head><body>
+<title>Job Search Tracker</title>
+
+<style>
+:root {
+  color-scheme: light;
+  --surface:      #fcfcfb;
+  --plane:        #f9f9f7;
+  --ink:          #0b0b0b;
+  --ink-2:        #52514e;
+  --ink-mute:     #898781;
+  --grid:         #e1e0d9;
+  --axis:         #c3c2b7;
+  --hairline:     rgba(11,11,11,0.10);
+  --series-1:     #2a78d6;
+  --ord-1:        #86b6ef;
+  --ord-2:        #5598e7;
+  --ord-3:        #3987e5;
+  --ord-4:        #2a78d6;
+  --ord-5:        #256abf;
+  --ord-6:        #184f95;
+  --ord-7:        #0d366b;
+  --good:         #0ca30c;
+  --warning:      #fab219;
+  --serious:      #ec835a;
+  --critical:     #d03b3b;
+  --good-ink:     #006300;
+  --shadow:       0 1px 2px rgba(11,11,11,.05), 0 1px 1px rgba(11,11,11,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface: #1a1a19; --plane: #0d0d0d; --ink: #ffffff; --ink-2: #c3c2b7;
+    --ink-mute: #898781; --grid: #2c2c2a; --axis: #383835;
+    --hairline: rgba(255,255,255,0.10); --series-1: #3987e5;
+    --ord-1: #184f95; --ord-2: #256abf; --ord-3: #2a78d6; --ord-4: #3987e5;
+    --ord-5: #5598e7; --ord-6: #86b6ef; --ord-7: #b7d3f6;
+    --good-ink: #0ca30c; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #1a1a19; --plane: #0d0d0d; --ink: #ffffff; --ink-2: #c3c2b7;
+  --ink-mute: #898781; --grid: #2c2c2a; --axis: #383835;
+  --hairline: rgba(255,255,255,0.10); --series-1: #3987e5;
+  --ord-1: #184f95; --ord-2: #256abf; --ord-3: #2a78d6; --ord-4: #3987e5;
+  --ord-5: #5598e7; --ord-6: #86b6ef; --ord-7: #b7d3f6;
+  --good-ink: #0ca30c; --shadow: none;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--plane); color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+}
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px 96px; }
+
+/* provenance */
+.prov { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--hairline); }
+.prov-inner { max-width: 1180px; margin: 0 auto; padding: 10px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; }
+.prov-badge { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; letter-spacing: .02em; padding: 3px 9px; border-radius: 3px; background: var(--plane); border: 1px solid var(--hairline); color: var(--ink-2); }
+.prov-badge.is-good { border-color: var(--good); color: var(--ink); }
+.prov-badge.is-warn { border-color: var(--warning); color: var(--ink); }
+.prov-badge.is-crit { border-color: var(--critical); color: var(--ink); }
+.prov-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-mute); flex: none; }
+.is-good .prov-dot { background: var(--good); }
+.is-warn .prov-dot { background: var(--warning); }
+.is-crit .prov-dot { background: var(--critical); }
+.prov-fact { font-size: 12.5px; color: var(--ink-2); display: flex; gap: 6px; align-items: baseline; }
+.prov-fact b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.prov-spacer { flex: 1 1 auto; }
+
+header.mast { padding: 40px 0 8px; }
+header.mast h1 { margin: 0; font-size: 30px; line-height: 1.15; letter-spacing: -0.02em; font-weight: 640; text-wrap: balance; }
+header.mast p.sub { margin: 10px 0 0; color: var(--ink-2); max-width: 68ch; font-size: 14.5px; }
+
+nav.jump { display: flex; flex-wrap: wrap; gap: 6px; margin: 24px 0 8px; border-bottom: 1px solid var(--grid); }
+nav.jump a { font-size: 13px; font-weight: 550; color: var(--ink-2); text-decoration: none; padding: 8px 12px; border-bottom: 2px solid transparent; margin-bottom: -1px; border-radius: 3px 3px 0 0; }
+nav.jump a:hover { color: var(--ink); background: var(--surface); }
+
+section.band { padding-top: 44px; scroll-margin-top: 60px; }
+section.band > h2 { margin: 0 0 4px; font-size: 12px; font-weight: 680; letter-spacing: .10em; text-transform: uppercase; color: var(--ink-mute); }
+section.band > p.lede { margin: 0 0 22px; font-size: 18px; line-height: 1.4; letter-spacing: -0.01em; color: var(--ink); max-width: 62ch; text-wrap: balance; }
+
+.card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 6px; padding: 20px 22px 22px; box-shadow: var(--shadow); margin-bottom: 18px; }
+.card > h3 { margin: 0 0 3px; font-size: 15.5px; font-weight: 630; letter-spacing: -0.005em; }
+.card > p.note { margin: 0 0 18px; font-size: 13px; color: var(--ink-2); max-width: 72ch; }
+.card > p.note:last-child { margin-bottom: 0; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.tile { background: var(--surface); border: 1px solid var(--hairline); border-radius: 6px; padding: 16px 18px 17px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 2px; }
+.tile .k { font-size: 11.5px; font-weight: 640; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-mute); }
+.tile .v { font-size: 32px; font-weight: 620; letter-spacing: -0.025em; line-height: 1.1; }
+.tile .d { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; }
+.tile.accent { border-left: 3px solid var(--series-1); }
+.tile.crit { border-left: 3px solid var(--critical); }
+.tile.good { border-left: 3px solid var(--good); }
+
+/* action list */
+.acts { display: flex; flex-direction: column; gap: 10px; }
+.act { border: 1px solid var(--hairline); border-left: 3px solid var(--axis); border-radius: 5px; padding: 13px 16px 14px; background: var(--surface); }
+.act.urgent { border-left-color: var(--critical); }
+.act.call   { border-left-color: var(--good); }
+.act-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin-bottom: 3px; }
+.act-co { font-size: 15px; font-weight: 630; letter-spacing: -0.005em; }
+.act-role { font-size: 13.5px; color: var(--ink-2); }
+.act-body { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+.act-body.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.act-more { font: inherit; font-size: 12.5px; background: none; border: none; padding: 4px 0 0; color: var(--series-1); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+
+/* bars */
+.bars { display: flex; flex-direction: column; gap: 2px; }
+.barrow { display: grid; grid-template-columns: minmax(120px, 200px) 1fr auto; align-items: center; gap: 14px; padding: 5px 6px; border-radius: 4px; }
+.barrow:hover { background: var(--plane); }
+.barrow .lab { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.barrow .lab .sub { color: var(--ink-mute); font-size: 12px; }
+.bartrack { height: 11px; background: var(--grid); border-radius: 2px; overflow: hidden; min-width: 40px; }
+.barfill { height: 100%; background: var(--series-1); border-radius: 0 3px 3px 0; min-width: 2px; }
+.barrow .val { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; min-width: 92px; }
+.barrow .val em { font-style: normal; font-weight: 400; color: var(--ink-mute); }
+
+.stack { display: flex; gap: 2px; height: 13px; border-radius: 2px; overflow: hidden; }
+.stack > span { display: block; min-width: 2px; }
+.seg-yes { background: var(--good); }
+.seg-no { background: var(--critical); }
+.seg-unclear { background: var(--axis); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 16px; padding: 0; list-style: none; }
+.legend li { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-2); }
+.swatch { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+
+.funnel { display: flex; flex-direction: column; gap: 2px; }
+.fstage { display: grid; grid-template-columns: 132px 1fr auto; align-items: center; gap: 14px; padding: 5px 6px; border-radius: 4px; }
+.fstage:hover { background: var(--plane); }
+.fbar { height: 15px; border-radius: 2px; min-width: 2px; }
+.fstage .val { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; }
+
+/* repeats */
+.repeat { display: flex; flex-direction: column; gap: 2px; }
+.rep-item > summary { display: grid; grid-template-columns: minmax(140px, 230px) 1fr auto auto; align-items: center; gap: 14px; padding: 7px 8px; cursor: pointer; border-radius: 4px; list-style: none; }
+.rep-item > summary::-webkit-details-marker { display: none; }
+.rep-item > summary:hover, .rep-item[open] > summary { background: var(--plane); }
+.rep-name { font-size: 13.5px; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rep-count { font-size: 13px; font-weight: 620; font-variant-numeric: tabular-nums; min-width: 74px; text-align: right; }
+.rep-count em { font-style: normal; font-weight: 400; color: var(--ink-mute); font-size: 12px; }
+.rep-detail { padding: 4px 8px 12px; }
+.rep-detail table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.rep-detail td { padding: 4px 10px 4px 0; border-top: 1px solid var(--grid); color: var(--ink-2); vertical-align: top; }
+.rep-detail td:first-child { color: var(--ink); white-space: nowrap; }
+
+.flag { font-size: 10.5px; font-weight: 680; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; white-space: nowrap; border: 1px solid var(--critical); }
+.flag.quiet { border-color: var(--hairline); color: var(--ink-mute); }
+.flag.hist { border-color: var(--warning); }
+
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 3px; border: 1px solid var(--hairline); color: var(--ink-2); white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+.pill.s-interviewing, .pill.s-offer { border-color: var(--good); color: var(--good-ink); }
+.pill.s-screening, .pill.s-replied { border-color: var(--series-1); color: var(--series-1); }
+.pill.s-needsyou { border-color: var(--critical); color: var(--critical); }
+.pill.s-closed, .pill.s-lead, .pill.s-offcriteria, .pill.s-paused { border-color: var(--hairline); color: var(--ink-mute); }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--hairline); border-radius: 6px; background: var(--surface); }
+table.data { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 820px; }
+table.data th { text-align: left; font-size: 11px; font-weight: 680; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-mute); padding: 10px 12px; border-bottom: 1px solid var(--axis); position: sticky; top: 0; background: var(--surface); white-space: nowrap; }
+table.data th.sortable { cursor: pointer; user-select: none; }
+table.data th.sortable:hover { color: var(--ink); }
+table.data th .arrow { opacity: .45; font-size: 10px; }
+table.data td { padding: 9px 12px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+table.data tr:last-child td { border-bottom: none; }
+table.data tbody tr:hover { background: var(--plane); }
+td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+td.date { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-2); }
+td.co { font-weight: 550; }
+td.wide { min-width: 260px; max-width: 460px; font-size: 12.5px; color: var(--ink-2); }
+a.thread { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; color: var(--series-1); text-decoration: none; border-bottom: 1px solid transparent; }
+a.thread:hover { border-bottom-color: var(--series-1); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+input[type="search"], select { font: inherit; font-size: 13.5px; padding: 7px 10px; border: 1px solid var(--axis); border-radius: 4px; background: var(--surface); color: var(--ink); }
+input[type="search"] { min-width: 240px; flex: 1 1 240px; max-width: 380px; }
+label.ctl { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-2); }
+.count-note { font-size: 12.5px; color: var(--ink-mute); font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
+
+.state { border: 1px solid var(--hairline); border-left: 3px solid var(--ink-mute); border-radius: 6px; background: var(--surface); padding: 16px 18px; margin-bottom: 18px; }
+.state.warn { border-left-color: var(--warning); }
+.state h3 { margin: 0 0 5px; font-size: 14.5px; font-weight: 630; }
+.state p { margin: 0; font-size: 13.5px; color: var(--ink-2); max-width: 76ch; }
+.empty { font-size: 13.5px; color: var(--ink-mute); padding: 8px 6px; }
+.hidden { display: none !important; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+footer.foot { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--grid); font-size: 12.5px; color: var(--ink-mute); max-width: 76ch; }
+footer.foot p { margin: 0 0 8px; }
+
+/* ── review controls (artifact capability) ─────────────────────────────── */
+.rev { display:flex; flex-direction:column; gap:4px; min-width:150px; }
+.rev select, .rev input {
+  font: inherit; font-size:11px; padding:3px 5px; border-radius:5px;
+  border:1px solid var(--grid); background:var(--surface); color:var(--ink);
+  width:100%; max-width:180px;
+}
+.rev select:focus-visible, .rev input:focus-visible { outline:2px solid var(--series-1); outline-offset:1px; }
+.rev.dirty select, .rev.dirty input { border-color:var(--series-1); }
+tr.edited { background:color-mix(in srgb, var(--series-1) 7%, transparent); }
+.pill.proposed { background:transparent; border:1px dashed var(--series-1); color:var(--series-1); }
+.arrow-to { color:var(--ink-mute); font-size:11px; padding:0 3px; }
+.savebar {
+  position:sticky; bottom:0; z-index:20; display:flex; align-items:center; gap:12px;
+  flex-wrap:wrap; padding:10px 14px; margin-top:14px; border-radius:10px;
+  border:1px solid var(--grid); background:var(--plane); box-shadow:var(--shadow);
+}
+.savebar[hidden] { display:none; }
+.savebar .grow { flex:1 1 auto; }
+.savebar b { color:var(--ink); }
+.savebar button {
+  font:inherit; font-size:12px; font-weight:600; padding:6px 14px; border-radius:6px;
+  border:1px solid transparent; background:var(--series-1); color:#fff; cursor:pointer;
+}
+.savebar button.ghost { background:transparent; border-color:var(--grid); color:var(--ink-2); }
+.savebar button[disabled] { opacity:.5; cursor:default; }
+.savemsg { font-size:12px; color:var(--ink-2); }
+.savemsg.bad { color:var(--critical); }
+.savemsg.ok  { color:var(--good-ink); }
+.ro-note {
+  margin:10px 0 0; padding:9px 12px; border-radius:8px; font-size:12px;
+  border:1px solid var(--grid); background:var(--plane); color:var(--ink-2);
+}
+.ro-note[hidden] { display:none; }
+</style>
+
+<div class="prov">
+  <div class="prov-inner">
+    <span class="prov-badge is-good"><span class="prov-dot"></span>pipeline.md</span>
+    <span class="prov-fact"><b id="rowCount">—</b> rows</span>
+    <span class="prov-fact">last swept <b id="sweptDate">—</b></span>
+    <span class="prov-spacer"></span>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>Job Search Tracker</h1>
+    <p class="sub">Built from the ledger — <span class="mono">pipeline.md</span>, <span class="mono">pipeline-leads.md</span> and <span class="mono">pipeline-archive.md</span> — baked in at publish time.</p>
+  </header>
+
+  <nav class="jump">
+    <a href="#now">Needs you</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#effort">Return on effort</a>
+    <a href="#leads">Leads</a>
+    <a href="#archive">Everything</a>
+  </nav>
+
+  <main>
+    <section class="band" id="now">
+      <h2>01 — Owed by you</h2>
+      <p class="lede">Rows the ledger has flagged as needing a decision, a reply, or a call — before anything else on this page.</p>
+      <div class="tiles" id="tiles"></div>
+      <div class="acts" id="actionList"></div>
+    </section>
+
+    <section class="band" id="pipeline">
+      <h2>02 — Pipeline</h2>
+      <p class="lede">Where everything sits, and what each live row is waiting on.</p>
+
+      <div class="card">
+        <h3>By stage</h3>
+        <p class="note">Stages come straight from the ledger. <strong>Needs you</strong> collects rows the sweep marked as blocked on a decision of yours.</p>
+        <div class="funnel" id="funnel"></div>
+      </div>
+
+      <div class="card">
+        <h3>Live rows and their next action</h3>
+        <p class="note">Everything not closed, not off-criteria, and not a lead — ordered by stage. The <strong>next action</strong> column is the ledger's own text, trimmed of formatting.</p>
+        <div class="tablewrap"><table class="data" id="liveTable"></table></div>
+        <p class="ro-note" id="roNote" hidden></p>
+        <div class="savebar" id="saveBar" hidden>
+          <span class="grow"><b id="dirtyCount">0</b> unsaved change(s) &mdash; these are <em>proposals</em>. The ledger is still the source of truth.</span>
+          <span class="savemsg" id="saveMsg"></span>
+          <button type="button" class="ghost" id="discardBtn">Discard</button>
+          <button type="button" id="saveBtn">Save to artifact</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="effort">
+      <h2>03 — Return on effort</h2>
+      <p class="lede">Which sources produce a human, and which companies have received more applications than they've ever answered.</p>
+
+      <div class="card">
+        <h3>Companies applied to more than once</h3>
+        <p class="note">Counted across all three ledger files, grouping names after normalizing legal suffixes and parentheticals. <strong>These numbers undercount and are meant to.</strong> The ledger holds what was tracked; the real repeat check is a Gmail search for <span class="mono">in:anywhere "&lt;company&gt;"</span>, which covers every application ever made. A company showing twice here may have been applied to ten times.</p>
+        <div class="repeat" id="repeatList"></div>
+      </div>
+
+      <div class="card">
+        <h3>Sources that reach a human</h3>
+        <p class="note"><strong>Reached a human</strong> means the row got past submitted — a reply, a screen, an interview, or a rejection someone actually sent. A row that simply went quiet did not. Sources with fewer than 3 rows are folded into “Other”.</p>
+        <div class="bars" id="sourceBars"></div>
+      </div>
+
+      <div class="card">
+        <h3>On-criteria drift</h3>
+        <p class="note">The ledger files off-criteria submissions into their own section rather than tagging them per row, so this is a count of what the automated applicants sent that you would not have chosen.</p>
+        <ul class="legend">
+          <li><span class="swatch seg-yes"></span> On criteria</li>
+          <li><span class="swatch seg-no"></span> Off criteria</li>
+        </ul>
+        <div class="bars" id="criteriaBars"></div>
+      </div>
+    </section>
+
+    <section class="band" id="leads">
+      <h2>04 — Leads</h2>
+      <p class="lede">Postings mined from digests and never acted on. Identified, not applied to.</p>
+      <div class="card">
+        <div class="controls">
+          <input type="search" id="leadQ" placeholder="Search leads…" aria-label="Search leads">
+          <label class="ctl">Comp <select id="leadComp">
+            <option value="">Any</option>
+            <option value="band">Published a band</option>
+            <option value="inband">Inside $120K–$185K</option>
+            <option value="above">Above $185K</option>
+            <option value="under">Below $120K</option>
+          </select></label>
+          <label class="ctl"><input type="checkbox" id="leadLocal"> {{METRO}} only</label>
+          <span class="count-note" id="leadCount"></span>
+        </div>
+        <div class="tablewrap"><table class="data" id="leadTable"></table></div>
+      </div>
+    </section>
+
+    <section class="band" id="archive">
+      <h2>05 — Everything</h2>
+      <p class="lede">All {{N}} ledger rows, searchable, each linked back to its Gmail thread.</p>
+      <div class="card">
+        <div class="controls">
+          <input type="search" id="q" placeholder="Search company, role, notes…" aria-label="Search all rows">
+          <label class="ctl">Section <select id="fSection"><option value="">All</option></select></label>
+          <label class="ctl">Stage <select id="fStage"><option value="">All</option></select></label>
+          <span class="count-note" id="archiveCount"></span>
+        </div>
+        <div class="tablewrap"><table class="data" id="archiveTable"></table></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p><strong>Primary source.</strong> <span class="mono">Job Search/pipeline.md</span>, extracted at publish time by <span class="mono">Dashboards/build-data.mjs</span>. Nothing here is fetched at load, so the page is exactly as current as the last publish — the date in the strip above is the ledger's own last-swept date, not this page's.</p>
+    <p><strong>One source, three files.</strong> The ledger was split on 2026-08-06 when <span class="mono">pipeline.md</span> passed 292KB and stopped being readable in one pass. <span class="mono">pipeline.md</span> holds live work, <span class="mono">pipeline-leads.md</span> the un-worked backlog, <span class="mono">pipeline-archive.md</span> the closed rows and sweep history. All three are parsed here; the row count is the check that none of them dropped out.</p>
+    <p><strong>Repeat counts are ledger-only, and they undercount.</strong> A second layer used to read the Google Sheet archive for all-time counts through the Drive connector. <strong>That was retired on 2026-08-06 and the code is gone</strong> — the sheet is a lagging archive that no sweep reads or writes. To check whether a company is a genuine repeat, search Gmail for <span class="mono">in:anywhere "&lt;company&gt;"</span>; that covers every application ever made and cannot go stale.</p>
+  </footer>
+</div>
+
+<script type="text/plain" id="__TPL__">%%TPL%%<\/script><!--__TPL_END__-->
+<script>
+/*__OVERRIDES_START__*/
+%%OVERRIDES%%
+/*__OVERRIDES_END__*/
+/*__PIPELINE_DATA_START__*/
+%%DATA%%
+/*__PIPELINE_DATA_END__*/
+
+(() => {
+  "use strict";
+
+  const FLOOR = 120000, CEILING = 185000;
+
+  const ROWS = PIPELINE.rows || [];
+
+  /* ═══════════════════ artifact round-trip: publish state ═══════════════ */
+
+  OVERRIDES = OVERRIDES && typeof OVERRIDES === "object" ? OVERRIDES : { updated: null, edits: {} };
+  OVERRIDES.edits = OVERRIDES.edits || {};
+
+  let READ_ONLY = false;   // flipped by the first not_writer / not_granted
+  let dirty = false;       // unsaved proposals in this view
+  let saving = false;
+
+  // No Date.now() worry here — this is the browser, not a workflow script.
+  const stamp = () => new Date().toISOString().slice(0, 19) + "Z";
+
+  const $ = id => document.getElementById(id);
+  const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+
+  const LIVE_STAGES = ["Needs you", "Interviewing", "Screening", "Replied", "Applied", "Paused", "Paid"];
+  const STAGE_ORDER = ["Needs you", "Interviewing", "Screening", "Replied", "Applied", "Paused", "Paid", "Lead", "Off-criteria", "Closed"];
+  const ENGAGED = new Set(["Needs you", "Interviewing", "Screening", "Replied", "Offer"]);
+  const REJECTED_RE = /reject|filled|not moving|declin|another candidate|no relevant|closed the req/i;
+
+  const pct = (n, d) => d === 0 ? 0 : (n / d) * 100;
+  const fmtPct = v => (v >= 10 ? v.toFixed(0) : v.toFixed(1)) + "%";
+
+  const isLive = r => LIVE_STAGES.includes(r.stage) && r.section !== "lead" && r.section !== "offcriteria";
+  const reachedHuman = r => ENGAGED.has(r.stage) || (r.stage === "Closed" && REJECTED_RE.test(r.note || ""));
+
+  function stagePill(stage) {
+    return el("span", "pill s-" + stage.toLowerCase().replace(/[^a-z]/g, ""), stage);
+  }
+  function threadLink(id) {
+    if (!id) return el("span", "mono", "—");
+    const a = el("a", "thread", id.slice(0, 12));
+    a.href = "https://mail.google.com/mail/u/0/#all/" + id;
+    a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.title = "Open thread " + id + " in Gmail";
+    return a;
+  }
+
+  /* ------------------------------ tiles ------------------------------ */
+
+  function renderTiles() {
+    const host = $("tiles"); host.replaceChildren();
+    const live = ROWS.filter(isLive);
+    const needs = ROWS.filter(r => r.stage === "Needs you" || r.flags.includes("urgent")).length;
+    const advanced = ROWS.filter(r => ["Interviewing", "Screening", "Offer"].includes(r.stage)).length;
+    const leads = ROWS.filter(r => r.section === "lead").length;
+    const off = ROWS.filter(r => r.section === "offcriteria").length;
+
+    [
+      { k: "Needs you", v: String(needs), d: "flagged for a decision or a reply", cls: needs ? "crit" : "" },
+      { k: "In conversation", v: String(advanced), d: "screening, interviewing, or at offer", cls: advanced ? "good" : "" },
+      { k: "Live rows", v: String(live.length), d: "not closed, not a lead", cls: "accent" },
+      { k: "Unworked leads", v: String(leads), d: off + " off-criteria submissions on record", cls: "" },
+    ].forEach(t => {
+      const n = el("div", "tile" + (t.cls ? " " + t.cls : ""));
+      n.append(el("div", "k", t.k), el("div", "v", t.v), el("div", "d", t.d));
+      host.appendChild(n);
+    });
+  }
+
+  /* --------------------------- action list --------------------------- */
+
+  function renderActions() {
+    const host = $("actionList"); host.replaceChildren();
+    const rank = r => r.stage === "Needs you" ? 0 : r.flags.includes("urgent") ? 1
+                    : r.stage === "Interviewing" ? 2 : r.stage === "Screening" ? 3 : 9;
+    const list = ROWS
+      .filter(r => r.section !== "lead" && r.section !== "offcriteria")
+      .filter(r => r.stage === "Needs you" || r.flags.includes("urgent") ||
+                   ["Interviewing", "Screening"].includes(r.stage))
+      .sort((a, b) => rank(a) - rank(b));
+
+    if (!list.length) { host.appendChild(el("div", "empty", "Nothing is flagged as needing you.")); return; }
+
+    list.forEach(r => {
+      const cls = r.flags.includes("call") ? "act call" : (r.stage === "Needs you" || r.flags.includes("urgent")) ? "act urgent" : "act";
+      const n = el("div", cls);
+      const head = el("div", "act-head");
+      head.append(el("span", "act-co", r.company), stagePill(r.stage));
+      if (r.role && r.role !== "—") head.append(el("span", "act-role", r.role));
+      if (r.thread) head.append(threadLink(r.thread));
+      n.appendChild(head);
+
+      const text = r.nextAction || r.note || "";
+      if (text) {
+        const body = el("div", "act-body" + (text.length > 260 ? " clamp" : ""), text);
+        n.appendChild(body);
+        if (text.length > 260) {
+          const btn = el("button", "act-more", "Show more");
+          btn.type = "button";
+          btn.addEventListener("click", () => {
+            const on = body.classList.toggle("clamp");
+            btn.textContent = on ? "Show more" : "Show less";
+          });
+          n.appendChild(btn);
+        }
+      }
+      host.appendChild(n);
+    });
+  }
+
+  /* ----------------------------- funnel ----------------------------- */
+
+  function renderFunnel() {
+    const host = $("funnel"); host.replaceChildren();
+    const counts = new Map();
+    ROWS.forEach(r => counts.set(r.stage, (counts.get(r.stage) || 0) + 1));
+    const present = STAGE_ORDER.filter(s => counts.has(s));
+    [...counts.keys()].forEach(k => { if (!present.includes(k)) present.push(k); });
+    const max = Math.max(...present.map(s => counts.get(s)), 1);
+
+    present.forEach((stage, i) => {
+      const n = counts.get(stage);
+      const row = el("div", "fstage");
+      row.title = stage + ": " + n + " of " + ROWS.length;
+      const lab = el("div", "lab"); lab.appendChild(stagePill(stage));
+      const bar = el("div", "fbar");
+      bar.style.width = Math.max(pct(n, max), 0.5) + "%";
+      bar.style.background = "var(--ord-" + Math.min(7, i + 1) + ")";
+      row.append(lab, bar, el("div", "val", String(n)));
+      host.appendChild(row);
+    });
+  }
+
+  /* ------------------------------ tables ------------------------------ */
+
+  function buildTable(table, cols, rows, emptyMsg) {
+    table.replaceChildren();
+    const thead = el("thead"), htr = el("tr");
+    cols.forEach(c => { const th = el("th", c.cls, c.label); htr.appendChild(th); });
+    thead.appendChild(htr); table.appendChild(thead);
+    const tb = el("tbody");
+    if (!rows.length) {
+      const tr = el("tr"), td = el("td");
+      td.colSpan = cols.length; td.appendChild(el("div", "empty", emptyMsg));
+      tr.appendChild(td); tb.appendChild(tr);
+    } else {
+      rows.forEach(r => {
+        const tr = el("tr");
+        cols.forEach(c => {
+          const td = el("td", c.cls);
+          const v = c.get(r);
+          if (v instanceof Node) td.appendChild(v);
+          else td.textContent = v == null || v === "" ? "—" : String(v);
+          tr.appendChild(td);
+        });
+        tb.appendChild(tr);
+      });
+    }
+    table.appendChild(tb);
+  }
+
+  function renderLive() {
+    const order = s => { const i = STAGE_ORDER.indexOf(s); return i === -1 ? 99 : i; };
+    const list = ROWS.filter(isLive).sort((a, b) => order(a.stage) - order(b.stage) || a.company.localeCompare(b.company));
+    buildTable($("liveTable"), [
+      { label: "Company", cls: "co", get: r => r.company },
+      { label: "Role", get: r => r.role },
+      { label: "Stage", get: r => stageCell(r) },
+      { label: "Source", get: r => r.source },
+      { label: "Last touch", cls: "date", get: r => r.lastTouch },
+      { label: "Next action", cls: "wide", get: r => r.nextAction },
+      { label: "Thread", get: r => threadLink(r.thread) },
+      { label: "Your call", get: r => reviewCell(r) },
+    ], list, "Nothing live in the ledger.");
+    paintEdited();
+  }
+
+  /* ---------------------- review: propose a change ---------------------- */
+  //
+  // 🔴 THESE CONTROLS PROPOSE, THEY DO NOT DECIDE. Everything typed here lands
+  // in OVERRIDES and is published back into this artifact. It does NOT touch
+  // pipeline.md, and it does NOT touch ClickUp. Reconciling is a deliberate
+  // step you run (`node Tools/dashboard-overrides.mjs`), because the
+  // ledger is the source of truth and a projection must never quietly become
+  // a second one.
+
+  function stageCell(r) {
+    const wrap = el("span");
+    wrap.style.display = "inline-flex";
+    wrap.style.alignItems = "center";
+    wrap.appendChild(stagePill(r.stage));
+    const ov = OVERRIDES.edits[r.key];
+    if (ov && ov.stage && ov.stage !== r.stage) {
+      wrap.append(el("span", "arrow-to", "\u2192"));
+      const p = stagePill(ov.stage); p.classList.add("proposed");
+      wrap.appendChild(p);
+    }
+    return wrap;
+  }
+
+  function reviewCell(r) {
+    const box = el("div", "rev");
+    const ov = OVERRIDES.edits[r.key] || {};
+
+    const sel = el("select");
+    sel.setAttribute("aria-label", "Proposed stage for " + r.company);
+    const keep = el("option", null, "\u2014 no change \u2014"); keep.value = "";
+    sel.appendChild(keep);
+    STAGE_ORDER.forEach(st => { const o = el("option", null, st); o.value = st; sel.appendChild(o); });
+    sel.value = ov.stage && ov.stage !== r.stage ? ov.stage : "";
+
+    const note = el("input");
+    note.type = "text";
+    note.placeholder = "note for the next sweep\u2026";
+    note.maxLength = 240;
+    note.setAttribute("aria-label", "Note for " + r.company);
+    note.value = ov.note || "";
+
+    const push = () => {
+      const stage = sel.value && sel.value !== r.stage ? sel.value : null;
+      const text  = note.value.trim();
+      if (!stage && !text) delete OVERRIDES.edits[r.key];
+      else OVERRIDES.edits[r.key] = {
+        company: r.company, role: r.role, thread: r.thread || null,
+        was: r.stage, stage, note: text || null, at: stamp(),
+      };
+      box.classList.toggle("dirty", !!OVERRIDES.edits[r.key]);
+      dirty = true; refreshBar(); paintEdited();
+      const cell = box.closest("tr");
+      if (cell) { const st = cell.children[2]; if (st) { st.replaceChildren(stageCell(r)); } }
+    };
+    sel.addEventListener("change", push);
+    note.addEventListener("change", push);
+
+    if (ov.stage || ov.note) box.classList.add("dirty");
+    box.append(sel, note);
+    if (READ_ONLY) { sel.disabled = true; note.disabled = true; }
+    return box;
+  }
+
+  function paintEdited() {
+    const rows = $("liveTable").querySelectorAll("tbody tr");
+    const list = ROWS.filter(isLive).sort((a, b) => {
+      const o = s => { const i = STAGE_ORDER.indexOf(s); return i === -1 ? 99 : i; };
+      return o(a.stage) - o(b.stage) || a.company.localeCompare(b.company);
+    });
+    rows.forEach((tr, i) => { const r = list[i]; if (r) tr.classList.toggle("edited", !!OVERRIDES.edits[r.key]); });
+  }
+
+  /* ----------------------------- repeats ----------------------------- */
+
+  function renderRepeats() {
+    const host = $("repeatList"); host.replaceChildren();
+    const groups = new Map();
+    ROWS.forEach(r => {
+      if (!r.companyKey) return;
+      if (!groups.has(r.companyKey)) groups.set(r.companyKey, []);
+      groups.get(r.companyKey).push(r);
+    });
+
+    const items = [...groups.entries()].map(([key, list]) => {
+      return {
+        key,
+        display: list[0].company,
+        list,
+        ledger: list.length,
+        allTime: list.length,
+        answered: list.some(reachedHuman),
+      };
+    }).filter(g => g.allTime >= 2)
+      .sort((a, b) => b.allTime - a.allTime || a.display.localeCompare(b.display));
+
+    if (!items.length) { host.appendChild(el("div", "empty", "No company appears more than once.")); return; }
+    const max = items[0].allTime;
+
+    items.forEach(g => {
+      const d = el("details", "rep-item");
+      const s = el("summary");
+      s.append(el("div", "rep-name", g.display));
+
+      const track = el("div", "bartrack"), fill = el("div", "barfill");
+      fill.style.width = pct(g.allTime, max) + "%";
+      if (!g.answered && g.allTime >= 3) fill.style.background = "var(--critical)";
+      track.appendChild(fill); s.appendChild(track);
+
+      const flags = el("div");
+      flags.style.display = "flex"; flags.style.gap = "6px";
+      if (!g.answered) flags.appendChild(el("span", "flag quiet", "Never answered"));
+      s.appendChild(flags);
+
+      const cnt = el("div", "rep-count");
+      cnt.innerHTML = "<strong>" + g.allTime + "</strong>";
+      s.append(cnt);
+      d.appendChild(s);
+
+      const detail = el("div", "rep-detail"), t = el("table"), tb = el("tbody");
+      g.list.forEach(r => {
+        const tr = el("tr");
+        const td1 = el("td", "mono", r.applied || r.found || r.closed || "—");
+        const td2 = el("td", null, r.role);
+        const td3 = el("td"); td3.appendChild(stagePill(r.stage));
+        const td4 = el("td"); td4.appendChild(threadLink(r.thread));
+        tr.append(td1, td2, td3, td4); tb.appendChild(tr);
+      });
+      t.appendChild(tb); detail.appendChild(t); d.appendChild(detail);
+      host.appendChild(d);
+    });
+  }
+
+  /* ------------------------------ sources ------------------------------ */
+
+  function renderSources() {
+    const host = $("sourceBars"); host.replaceChildren();
+    const map = new Map();
+    ROWS.filter(r => r.section !== "lead").forEach(r => {
+      const k = (r.source || "Not recorded").replace(/\s*\(.*?\)\s*/g, " ").trim() || "Not recorded";
+      if (!map.has(k)) map.set(k, { n: 0, hit: 0 });
+      const g = map.get(k); g.n++; if (reachedHuman(r)) g.hit++;
+    });
+
+    const MIN = 3, other = { n: 0, hit: 0, folded: 0 }, kept = [];
+    for (const [name, g] of map) {
+      if (g.n < MIN) { other.n += g.n; other.hit += g.hit; other.folded++; }
+      else kept.push([name, g]);
+    }
+    if (other.n) kept.push(["Other (" + other.folded + " sources)", other]);
+    kept.sort((a, b) => pct(b[1].hit, b[1].n) - pct(a[1].hit, a[1].n) || b[1].n - a[1].n);
+    if (!kept.length) { host.appendChild(el("div", "empty", "No source data.")); return; }
+
+    kept.forEach(([name, g]) => {
+      const row = el("div", "barrow");
+      row.title = name + " — " + g.hit + " reached a human of " + g.n;
+      row.append(el("div", "lab", name));
+      const track = el("div", "bartrack"), fill = el("div", "barfill");
+      fill.style.width = pct(g.hit, g.n) + "%";
+      if (g.hit === 0) fill.style.background = "var(--critical)";
+      track.appendChild(fill); row.appendChild(track);
+      const val = el("div", "val");
+      val.innerHTML = "<strong>" + fmtPct(pct(g.hit, g.n)) + "</strong> <em>" + g.hit + "/" + g.n + "</em>";
+      row.appendChild(val);
+      host.appendChild(row);
+    });
+  }
+
+  function renderCriteria() {
+    const host = $("criteriaBars"); host.replaceChildren();
+    const map = new Map();
+    ROWS.filter(r => r.section === "application" || r.section === "offcriteria" || r.section === "closed").forEach(r => {
+      const k = (r.source || "Not recorded").replace(/\s*\(.*?\)\s*/g, " ").trim() || "Not recorded";
+      if (!map.has(k)) map.set(k, { on: 0, off: 0, n: 0 });
+      const g = map.get(k);
+      if (r.section === "offcriteria") g.off++; else g.on++;
+      g.n++;
+    });
+    const list = [...map.entries()].filter(([, g]) => g.n >= 3).sort((a, b) => b[1].off - a[1].off || b[1].n - a[1].n);
+    if (!list.length) { host.appendChild(el("div", "empty", "Not enough rows per source.")); return; }
+
+    list.forEach(([name, g]) => {
+      const row = el("div", "barrow");
+      row.title = name + " — " + g.on + " on criteria, " + g.off + " off";
+      row.append(el("div", "lab", name));
+      const stack = el("div", "stack");
+      [["yes", g.on], ["no", g.off]].forEach(([cls, v]) => {
+        if (v <= 0) return;
+        const seg = el("span", "seg-" + cls);
+        seg.style.width = pct(v, g.n) + "%";
+        seg.title = v + (cls === "yes" ? " on criteria" : " off criteria");
+        stack.appendChild(seg);
+      });
+      row.appendChild(stack);
+      const val = el("div", "val");
+      val.innerHTML = "<strong>" + g.off + "</strong> <em>off / " + g.n + "</em>";
+      row.appendChild(val);
+      host.appendChild(row);
+    });
+  }
+
+  /* ------------------------------- leads ------------------------------- */
+
+  // 🔴 TEMPLATE: replace these with the cities in commuting range of {{METRO}}.
+  // See Data/job-criteria.md § Location — keep the two lists consistent.
+  const LOCAL_RE = /{{LOCAL_CITY_1}}|{{LOCAL_CITY_2}}|{{LOCAL_CITY_3}}/i;
+
+  function renderLeads() {
+    const q = $("leadQ").value.trim().toLowerCase();
+    const cf = $("leadComp").value;
+    const localOnly = $("leadLocal").checked;
+
+    let list = ROWS.filter(r => r.section === "lead").filter(r => {
+      if (localOnly && !LOCAL_RE.test(r.location || "")) return false;
+      if (cf === "band" && !r.comp) return false;
+      if (cf === "inband" && !(r.comp && r.comp.min >= FLOOR && r.comp.max <= CEILING)) return false;
+      if (cf === "above" && !(r.comp && r.comp.min > CEILING)) return false;
+      if (cf === "under" && !(r.comp && r.comp.max < FLOOR)) return false;
+      if (!q) return true;
+      return (r.company + " " + r.role + " " + (r.location || "") + " " + (r.note || "")).toLowerCase().includes(q);
+    }).sort((a, b) => (b.comp?.max || 0) - (a.comp?.max || 0) || (b.found || "").localeCompare(a.found || ""));
+
+    const total = ROWS.filter(r => r.section === "lead").length;
+    $("leadCount").textContent = list.length === total ? total + " leads" : list.length + " of " + total + " leads";
+
+    buildTable($("leadTable"), [
+      { label: "Company", cls: "co", get: r => r.company },
+      { label: "Role", get: r => r.role },
+      { label: "Location", get: r => r.location },
+      { label: "Comp", cls: "num", get: r => r.comp ? r.comp.raw : null },
+      { label: "Found", cls: "date", get: r => r.found },
+      { label: "Note", cls: "wide", get: r => r.note },
+    ], list, "No leads match these filters.");
+  }
+
+  /* ------------------------------ archive ------------------------------ */
+
+  let sortKey = "company", sortDir = 1;
+  const SECTION_LABEL = {
+    conversation: "Recruiter conversation", application: "Application", lead: "Lead",
+    closed: "Closed", offcriteria: "Off-criteria", gig: "Gig / contract", other: "Other",
+  };
+
+  function renderArchive() {
+    const q = $("q").value.trim().toLowerCase();
+    const fs = $("fSection").value, fst = $("fStage").value;
+
+    let list = ROWS.filter(r => {
+      if (fs && r.section !== fs) return false;
+      if (fst && r.stage !== fst) return false;
+      if (!q) return true;
+      return (r.company + " " + r.role + " " + (r.note || "") + " " + (r.nextAction || "") + " " + (r.source || ""))
+        .toLowerCase().includes(q);
+    });
+
+    list.sort((a, b) => {
+      const av = String(a[sortKey] ?? "").toLowerCase(), bv = String(b[sortKey] ?? "").toLowerCase();
+      return av < bv ? -sortDir : av > bv ? sortDir : 0;
+    });
+
+    $("archiveCount").textContent = list.length === ROWS.length ? ROWS.length + " rows" : list.length + " of " + ROWS.length + " rows";
+
+    const cols = [
+      { label: "Company", cls: "co", key: "company", get: r => r.company },
+      { label: "Role", key: "role", get: r => r.role },
+      { label: "Section", key: "section", get: r => SECTION_LABEL[r.section] || r.section },
+      { label: "Stage", key: "stage", get: r => stagePill(r.stage) },
+      { label: "Source", key: "source", get: r => r.source },
+      { label: "Date", cls: "date", key: "applied", get: r => r.applied || r.found || r.closed },
+      { label: "Thread", get: r => threadLink(r.thread) },
+    ];
+    buildTable($("archiveTable"), cols, list, "No rows match these filters.");
+
+    const ths = $("archiveTable").querySelectorAll("thead th");
+    cols.forEach((c, i) => {
+      if (!c.key) return;
+      const th = ths[i];
+      th.classList.add("sortable"); th.tabIndex = 0; th.setAttribute("role", "button");
+      if (c.key === sortKey) { th.append(" "); th.appendChild(el("span", "arrow", sortDir === 1 ? "▲" : "▼")); }
+      const go = () => { if (sortKey === c.key) sortDir = -sortDir; else { sortKey = c.key; sortDir = 1; } renderArchive(); };
+      th.addEventListener("click", go);
+      th.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    });
+  }
+
+  function fillFilters() {
+    const fill = (sel, values, label) => {
+      sel.replaceChildren();
+      const all = el("option", null, "All"); all.value = ""; sel.appendChild(all);
+      [...values].sort().forEach(v => { const o = el("option", null, label ? (label[v] || v) : v); o.value = v; sel.appendChild(o); });
+    };
+    fill($("fSection"), new Set(ROWS.map(r => r.section)), SECTION_LABEL);
+    fill($("fStage"), new Set(ROWS.map(r => r.stage)));
+  }
+
+  /* ------------------------- company normalization ------------------------ */
+
+  const LEGAL = /\b(inc|incorporated|llc|ltd|limited|corp|corporation|plc|gmbh)\b/g;
+  function normCompany(raw) {
+    let s = (raw || "").toLowerCase();
+    s = s.replace(/\([^)]*\)/g, " ").replace(/[.,]/g, " ").replace(LEGAL, " ")
+         .replace(/^\s*the\s+/, " ").replace(/[^a-z0-9]+/g, " ").trim();
+    return s;
+  }
+
+  /* ═════════════════════ artifact round-trip: publish ═══════════════════ */
+  //
+  // publish() wants a COMPLETE replacement document and forbids serializing
+  // the live DOM. So the page re-renders itself from the tokenized copy of its
+  // own source in <script id="__TPL__">. DATA and OVERRIDES are substituted
+  // FIRST and the template LAST — otherwise the tokens inside the embedded
+  // copy get eaten and the next generation of the page comes out empty.
+
+  const encTpl = t => t.split("<\/script").join("<\\/script");
+  const decTpl = t => t.split("<\\/script").join("<\/script");
+  const jsonEsc = o => JSON.stringify(o).replace(/</g, "\\u003c");
+
+  function renderPage() {
+    const node = document.getElementById("__TPL__");
+    if (!node) throw new Error("template missing");
+    const tpl = decTpl(node.textContent);
+    return tpl
+      .replace("%%DATA%%",      () => "const PIPELINE = " + jsonEsc(PIPELINE) + ";")
+      .replace("%%OVERRIDES%%", () => "let OVERRIDES = " + jsonEsc(OVERRIDES) + ";")
+      .replace("%%TPL%%",       () => encTpl(tpl));
+  }
+
+  function countEdits() { return Object.keys(OVERRIDES.edits).length; }
+
+  function refreshBar() {
+    const bar = $("saveBar"), n = countEdits();
+    $("dirtyCount").textContent = String(n);
+    bar.hidden = READ_ONLY || (n === 0 && !dirty);
+    $("saveBtn").disabled = saving || !dirty;
+  }
+
+  function say(msg, cls) {
+    const m = $("saveMsg");
+    m.textContent = msg || "";
+    m.className = "savemsg" + (cls ? " " + cls : "");
+  }
+
+  function goReadOnly(why) {
+    READ_ONLY = true;
+    $("saveBar").hidden = true;
+    const n = $("roNote");
+    n.hidden = false;
+    n.textContent = why || "This view is read-only, so proposals cannot be saved here. " +
+      "The page still shows everything the ledger holds.";
+    document.querySelectorAll(".rev select, .rev input").forEach(c => { c.disabled = true; });
+  }
+
+  const PERMANENT = new Set(["not_writer", "not_granted", "not_declared",
+                             "consent_required", "capability_disabled", "capability_removed"]);
+
+  async function save() {
+    if (saving || READ_ONLY) return;
+    saving = true; $("saveBtn").disabled = true; say("Saving\u2026");
+
+    OVERRIDES.updated = stamp();
+    let html;
+    try { html = renderPage(); }
+    catch (e) { saving = false; refreshBar(); say("Could not rebuild the page \u2014 nothing was saved.", "bad"); return; }
+
+    try {
+      const artifact = await claude.use("artifact");
+      if (!artifact) { saving = false; goReadOnly("Saving is unavailable in this view, so proposals stay on screen only."); return; }
+      await artifact.publish(html);
+      // The shell reloads every open view to the new version, this one included.
+      dirty = false; say("Saved.", "ok");
+    } catch (err) {
+      const code = (err && err.code) || "upstream_error";
+      if (PERMANENT.has(code)) { saving = false; goReadOnly(); return; }
+      if (code === "conflict") {
+        // Routine: someone else published first and the shell is already
+        // reloading this view to the winner. Say nothing alarming.
+        say("Someone else saved first \u2014 reloading to their version.");
+      } else if (code === "too_large") {
+        say("The page is too large to save. Tell You \u2014 this needs a rebuild, not a retry.", "bad");
+      } else if (code === "rate_limited") {
+        say("Saving too often. Wait a moment, then save again \u2014 your changes are still here.", "bad");
+      } else {
+        say("Save failed (" + code + "). Your changes are still on screen; try once more.", "bad");
+      }
+    } finally {
+      saving = false; refreshBar();
+    }
+  }
+
+  function wireReview() {
+    refreshBar();
+    $("saveBtn").addEventListener("click", save);
+    $("discardBtn").addEventListener("click", () => {
+      if (!countEdits() && !dirty) return;
+      OVERRIDES.edits = {}; dirty = false; say("");
+      renderLive(); refreshBar();
+    });
+    window.addEventListener("beforeunload", e => {
+      if (dirty && !READ_ONLY) { e.preventDefault(); e.returnValue = ""; }
+    });
+    // A page opened outside the claude.ai viewer has no capability at all.
+    if (typeof claude === "undefined" || !claude || typeof claude.use !== "function") {
+      goReadOnly("Opened outside the artifact viewer, so proposals cannot be saved. Read-only.");
+    }
+  }
+
+  /* ------------------------------- boot ------------------------------- */
+
+  $("rowCount").textContent = ROWS.length.toLocaleString();
+  $("sweptDate").textContent = PIPELINE.lastSwept || "unknown";
+  document.querySelectorAll("p.lede").forEach(p => {
+    p.textContent = p.textContent.replace("{{N}}", ROWS.length);
+  });
+
+  renderTiles(); renderActions(); renderFunnel(); renderLive();
+  renderRepeats(); renderSources(); renderCriteria();
+  fillFilters(); renderLeads(); renderArchive();
+
+  wireReview();
+
+  $("q").addEventListener("input", renderArchive);
+  $("fSection").addEventListener("change", renderArchive);
+  $("fStage").addEventListener("change", renderArchive);
+  $("leadQ").addEventListener("input", renderLeads);
+  $("leadComp").addEventListener("change", renderLeads);
+  $("leadLocal").addEventListener("change", renderLeads);
+
+})();
+<\/script>
+
+</body></html></script><!--__TPL_END__-->
+<script>
+/*__OVERRIDES_START__*/
+let OVERRIDES = {"updated":null,"edits":{}};
+/*__OVERRIDES_END__*/
+/*__PIPELINE_DATA_START__*/
+const PIPELINE = {"source":"Job Search/pipeline.md + pipeline-leads.md + pipeline-archive.md","lastSwept":null,"rows":[]};
+/*__PIPELINE_DATA_END__*/
+
+(() => {
+  "use strict";
+
+  const FLOOR = 120000, CEILING = 185000;
+
+  const ROWS = PIPELINE.rows || [];
+
+  /* ═══════════════════ artifact round-trip: publish state ═══════════════ */
+
+  OVERRIDES = OVERRIDES && typeof OVERRIDES === "object" ? OVERRIDES : { updated: null, edits: {} };
+  OVERRIDES.edits = OVERRIDES.edits || {};
+
+  let READ_ONLY = false;   // flipped by the first not_writer / not_granted
+  let dirty = false;       // unsaved proposals in this view
+  let saving = false;
+
+  // No Date.now() worry here — this is the browser, not a workflow script.
+  const stamp = () => new Date().toISOString().slice(0, 19) + "Z";
+
+  const $ = id => document.getElementById(id);
+  const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+
+  const LIVE_STAGES = ["Needs you", "Interviewing", "Screening", "Replied", "Applied", "Paused", "Paid"];
+  const STAGE_ORDER = ["Needs you", "Interviewing", "Screening", "Replied", "Applied", "Paused", "Paid", "Lead", "Off-criteria", "Closed"];
+  const ENGAGED = new Set(["Needs you", "Interviewing", "Screening", "Replied", "Offer"]);
+  const REJECTED_RE = /reject|filled|not moving|declin|another candidate|no relevant|closed the req/i;
+
+  const pct = (n, d) => d === 0 ? 0 : (n / d) * 100;
+  const fmtPct = v => (v >= 10 ? v.toFixed(0) : v.toFixed(1)) + "%";
+
+  const isLive = r => LIVE_STAGES.includes(r.stage) && r.section !== "lead" && r.section !== "offcriteria";
+  const reachedHuman = r => ENGAGED.has(r.stage) || (r.stage === "Closed" && REJECTED_RE.test(r.note || ""));
+
+  function stagePill(stage) {
+    return el("span", "pill s-" + stage.toLowerCase().replace(/[^a-z]/g, ""), stage);
+  }
+  function threadLink(id) {
+    if (!id) return el("span", "mono", "—");
+    const a = el("a", "thread", id.slice(0, 12));
+    a.href = "https://mail.google.com/mail/u/0/#all/" + id;
+    a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.title = "Open thread " + id + " in Gmail";
+    return a;
+  }
+
+  /* ------------------------------ tiles ------------------------------ */
+
+  function renderTiles() {
+    const host = $("tiles"); host.replaceChildren();
+    const live = ROWS.filter(isLive);
+    const needs = ROWS.filter(r => r.stage === "Needs you" || r.flags.includes("urgent")).length;
+    const advanced = ROWS.filter(r => ["Interviewing", "Screening", "Offer"].includes(r.stage)).length;
+    const leads = ROWS.filter(r => r.section === "lead").length;
+    const off = ROWS.filter(r => r.section === "offcriteria").length;
+
+    [
+      { k: "Needs you", v: String(needs), d: "flagged for a decision or a reply", cls: needs ? "crit" : "" },
+      { k: "In conversation", v: String(advanced), d: "screening, interviewing, or at offer", cls: advanced ? "good" : "" },
+      { k: "Live rows", v: String(live.length), d: "not closed, not a lead", cls: "accent" },
+      { k: "Unworked leads", v: String(leads), d: off + " off-criteria submissions on record", cls: "" },
+    ].forEach(t => {
+      const n = el("div", "tile" + (t.cls ? " " + t.cls : ""));
+      n.append(el("div", "k", t.k), el("div", "v", t.v), el("div", "d", t.d));
+      host.appendChild(n);
+    });
+  }
+
+  /* --------------------------- action list --------------------------- */
+
+  function renderActions() {
+    const host = $("actionList"); host.replaceChildren();
+    const rank = r => r.stage === "Needs you" ? 0 : r.flags.includes("urgent") ? 1
+                    : r.stage === "Interviewing" ? 2 : r.stage === "Screening" ? 3 : 9;
+    const list = ROWS
+      .filter(r => r.section !== "lead" && r.section !== "offcriteria")
+      .filter(r => r.stage === "Needs you" || r.flags.includes("urgent") ||
+                   ["Interviewing", "Screening"].includes(r.stage))
+      .sort((a, b) => rank(a) - rank(b));
+
+    if (!list.length) { host.appendChild(el("div", "empty", "Nothing is flagged as needing you.")); return; }
+
+    list.forEach(r => {
+      const cls = r.flags.includes("call") ? "act call" : (r.stage === "Needs you" || r.flags.includes("urgent")) ? "act urgent" : "act";
+      const n = el("div", cls);
+      const head = el("div", "act-head");
+      head.append(el("span", "act-co", r.company), stagePill(r.stage));
+      if (r.role && r.role !== "—") head.append(el("span", "act-role", r.role));
+      if (r.thread) head.append(threadLink(r.thread));
+      n.appendChild(head);
+
+      const text = r.nextAction || r.note || "";
+      if (text) {
+        const body = el("div", "act-body" + (text.length > 260 ? " clamp" : ""), text);
+        n.appendChild(body);
+        if (text.length > 260) {
+          const btn = el("button", "act-more", "Show more");
+          btn.type = "button";
+          btn.addEventListener("click", () => {
+            const on = body.classList.toggle("clamp");
+            btn.textContent = on ? "Show more" : "Show less";
+          });
+          n.appendChild(btn);
+        }
+      }
+      host.appendChild(n);
+    });
+  }
+
+  /* ----------------------------- funnel ----------------------------- */
+
+  function renderFunnel() {
+    const host = $("funnel"); host.replaceChildren();
+    const counts = new Map();
+    ROWS.forEach(r => counts.set(r.stage, (counts.get(r.stage) || 0) + 1));
+    const present = STAGE_ORDER.filter(s => counts.has(s));
+    [...counts.keys()].forEach(k => { if (!present.includes(k)) present.push(k); });
+    const max = Math.max(...present.map(s => counts.get(s)), 1);
+
+    present.forEach((stage, i) => {
+      const n = counts.get(stage);
+      const row = el("div", "fstage");
+      row.title = stage + ": " + n + " of " + ROWS.length;
+      const lab = el("div", "lab"); lab.appendChild(stagePill(stage));
+      const bar = el("div", "fbar");
+      bar.style.width = Math.max(pct(n, max), 0.5) + "%";
+      bar.style.background = "var(--ord-" + Math.min(7, i + 1) + ")";
+      row.append(lab, bar, el("div", "val", String(n)));
+      host.appendChild(row);
+    });
+  }
+
+  /* ------------------------------ tables ------------------------------ */
+
+  function buildTable(table, cols, rows, emptyMsg) {
+    table.replaceChildren();
+    const thead = el("thead"), htr = el("tr");
+    cols.forEach(c => { const th = el("th", c.cls, c.label); htr.appendChild(th); });
+    thead.appendChild(htr); table.appendChild(thead);
+    const tb = el("tbody");
+    if (!rows.length) {
+      const tr = el("tr"), td = el("td");
+      td.colSpan = cols.length; td.appendChild(el("div", "empty", emptyMsg));
+      tr.appendChild(td); tb.appendChild(tr);
+    } else {
+      rows.forEach(r => {
+        const tr = el("tr");
+        cols.forEach(c => {
+          const td = el("td", c.cls);
+          const v = c.get(r);
+          if (v instanceof Node) td.appendChild(v);
+          else td.textContent = v == null || v === "" ? "—" : String(v);
+          tr.appendChild(td);
+        });
+        tb.appendChild(tr);
+      });
+    }
+    table.appendChild(tb);
+  }
+
+  function renderLive() {
+    const order = s => { const i = STAGE_ORDER.indexOf(s); return i === -1 ? 99 : i; };
+    const list = ROWS.filter(isLive).sort((a, b) => order(a.stage) - order(b.stage) || a.company.localeCompare(b.company));
+    buildTable($("liveTable"), [
+      { label: "Company", cls: "co", get: r => r.company },
+      { label: "Role", get: r => r.role },
+      { label: "Stage", get: r => stageCell(r) },
+      { label: "Source", get: r => r.source },
+      { label: "Last touch", cls: "date", get: r => r.lastTouch },
+      { label: "Next action", cls: "wide", get: r => r.nextAction },
+      { label: "Thread", get: r => threadLink(r.thread) },
+      { label: "Your call", get: r => reviewCell(r) },
+    ], list, "Nothing live in the ledger.");
+    paintEdited();
+  }
+
+  /* ---------------------- review: propose a change ---------------------- */
+  //
+  // 🔴 THESE CONTROLS PROPOSE, THEY DO NOT DECIDE. Everything typed here lands
+  // in OVERRIDES and is published back into this artifact. It does NOT touch
+  // pipeline.md, and it does NOT touch ClickUp. Reconciling is a deliberate
+  // step you run (`node Tools/dashboard-overrides.mjs`), because the
+  // ledger is the source of truth and a projection must never quietly become
+  // a second one.
+
+  function stageCell(r) {
+    const wrap = el("span");
+    wrap.style.display = "inline-flex";
+    wrap.style.alignItems = "center";
+    wrap.appendChild(stagePill(r.stage));
+    const ov = OVERRIDES.edits[r.key];
+    if (ov && ov.stage && ov.stage !== r.stage) {
+      wrap.append(el("span", "arrow-to", "\u2192"));
+      const p = stagePill(ov.stage); p.classList.add("proposed");
+      wrap.appendChild(p);
+    }
+    return wrap;
+  }
+
+  function reviewCell(r) {
+    const box = el("div", "rev");
+    const ov = OVERRIDES.edits[r.key] || {};
+
+    const sel = el("select");
+    sel.setAttribute("aria-label", "Proposed stage for " + r.company);
+    const keep = el("option", null, "\u2014 no change \u2014"); keep.value = "";
+    sel.appendChild(keep);
+    STAGE_ORDER.forEach(st => { const o = el("option", null, st); o.value = st; sel.appendChild(o); });
+    sel.value = ov.stage && ov.stage !== r.stage ? ov.stage : "";
+
+    const note = el("input");
+    note.type = "text";
+    note.placeholder = "note for the next sweep\u2026";
+    note.maxLength = 240;
+    note.setAttribute("aria-label", "Note for " + r.company);
+    note.value = ov.note || "";
+
+    const push = () => {
+      const stage = sel.value && sel.value !== r.stage ? sel.value : null;
+      const text  = note.value.trim();
+      if (!stage && !text) delete OVERRIDES.edits[r.key];
+      else OVERRIDES.edits[r.key] = {
+        company: r.company, role: r.role, thread: r.thread || null,
+        was: r.stage, stage, note: text || null, at: stamp(),
+      };
+      box.classList.toggle("dirty", !!OVERRIDES.edits[r.key]);
+      dirty = true; refreshBar(); paintEdited();
+      const cell = box.closest("tr");
+      if (cell) { const st = cell.children[2]; if (st) { st.replaceChildren(stageCell(r)); } }
+    };
+    sel.addEventListener("change", push);
+    note.addEventListener("change", push);
+
+    if (ov.stage || ov.note) box.classList.add("dirty");
+    box.append(sel, note);
+    if (READ_ONLY) { sel.disabled = true; note.disabled = true; }
+    return box;
+  }
+
+  function paintEdited() {
+    const rows = $("liveTable").querySelectorAll("tbody tr");
+    const list = ROWS.filter(isLive).sort((a, b) => {
+      const o = s => { const i = STAGE_ORDER.indexOf(s); return i === -1 ? 99 : i; };
+      return o(a.stage) - o(b.stage) || a.company.localeCompare(b.company);
+    });
+    rows.forEach((tr, i) => { const r = list[i]; if (r) tr.classList.toggle("edited", !!OVERRIDES.edits[r.key]); });
+  }
+
+  /* ----------------------------- repeats ----------------------------- */
+
+  function renderRepeats() {
+    const host = $("repeatList"); host.replaceChildren();
+    const groups = new Map();
+    ROWS.forEach(r => {
+      if (!r.companyKey) return;
+      if (!groups.has(r.companyKey)) groups.set(r.companyKey, []);
+      groups.get(r.companyKey).push(r);
+    });
+
+    const items = [...groups.entries()].map(([key, list]) => {
+      return {
+        key,
+        display: list[0].company,
+        list,
+        ledger: list.length,
+        allTime: list.length,
+        answered: list.some(reachedHuman),
+      };
+    }).filter(g => g.allTime >= 2)
+      .sort((a, b) => b.allTime - a.allTime || a.display.localeCompare(b.display));
+
+    if (!items.length) { host.appendChild(el("div", "empty", "No company appears more than once.")); return; }
+    const max = items[0].allTime;
+
+    items.forEach(g => {
+      const d = el("details", "rep-item");
+      const s = el("summary");
+      s.append(el("div", "rep-name", g.display));
+
+      const track = el("div", "bartrack"), fill = el("div", "barfill");
+      fill.style.width = pct(g.allTime, max) + "%";
+      if (!g.answered && g.allTime >= 3) fill.style.background = "var(--critical)";
+      track.appendChild(fill); s.appendChild(track);
+
+      const flags = el("div");
+      flags.style.display = "flex"; flags.style.gap = "6px";
+      if (!g.answered) flags.appendChild(el("span", "flag quiet", "Never answered"));
+      s.appendChild(flags);
+
+      const cnt = el("div", "rep-count");
+      cnt.innerHTML = "<strong>" + g.allTime + "</strong>";
+      s.append(cnt);
+      d.appendChild(s);
+
+      const detail = el("div", "rep-detail"), t = el("table"), tb = el("tbody");
+      g.list.forEach(r => {
+        const tr = el("tr");
+        const td1 = el("td", "mono", r.applied || r.found || r.closed || "—");
+        const td2 = el("td", null, r.role);
+        const td3 = el("td"); td3.appendChild(stagePill(r.stage));
+        const td4 = el("td"); td4.appendChild(threadLink(r.thread));
+        tr.append(td1, td2, td3, td4); tb.appendChild(tr);
+      });
+      t.appendChild(tb); detail.appendChild(t); d.appendChild(detail);
+      host.appendChild(d);
+    });
+  }
+
+  /* ------------------------------ sources ------------------------------ */
+
+  function renderSources() {
+    const host = $("sourceBars"); host.replaceChildren();
+    const map = new Map();
+    ROWS.filter(r => r.section !== "lead").forEach(r => {
+      const k = (r.source || "Not recorded").replace(/\s*\(.*?\)\s*/g, " ").trim() || "Not recorded";
+      if (!map.has(k)) map.set(k, { n: 0, hit: 0 });
+      const g = map.get(k); g.n++; if (reachedHuman(r)) g.hit++;
+    });
+
+    const MIN = 3, other = { n: 0, hit: 0, folded: 0 }, kept = [];
+    for (const [name, g] of map) {
+      if (g.n < MIN) { other.n += g.n; other.hit += g.hit; other.folded++; }
+      else kept.push([name, g]);
+    }
+    if (other.n) kept.push(["Other (" + other.folded + " sources)", other]);
+    kept.sort((a, b) => pct(b[1].hit, b[1].n) - pct(a[1].hit, a[1].n) || b[1].n - a[1].n);
+    if (!kept.length) { host.appendChild(el("div", "empty", "No source data.")); return; }
+
+    kept.forEach(([name, g]) => {
+      const row = el("div", "barrow");
+      row.title = name + " — " + g.hit + " reached a human of " + g.n;
+      row.append(el("div", "lab", name));
+      const track = el("div", "bartrack"), fill = el("div", "barfill");
+      fill.style.width = pct(g.hit, g.n) + "%";
+      if (g.hit === 0) fill.style.background = "var(--critical)";
+      track.appendChild(fill); row.appendChild(track);
+      const val = el("div", "val");
+      val.innerHTML = "<strong>" + fmtPct(pct(g.hit, g.n)) + "</strong> <em>" + g.hit + "/" + g.n + "</em>";
+      row.appendChild(val);
+      host.appendChild(row);
+    });
+  }
+
+  function renderCriteria() {
+    const host = $("criteriaBars"); host.replaceChildren();
+    const map = new Map();
+    ROWS.filter(r => r.section === "application" || r.section === "offcriteria" || r.section === "closed").forEach(r => {
+      const k = (r.source || "Not recorded").replace(/\s*\(.*?\)\s*/g, " ").trim() || "Not recorded";
+      if (!map.has(k)) map.set(k, { on: 0, off: 0, n: 0 });
+      const g = map.get(k);
+      if (r.section === "offcriteria") g.off++; else g.on++;
+      g.n++;
+    });
+    const list = [...map.entries()].filter(([, g]) => g.n >= 3).sort((a, b) => b[1].off - a[1].off || b[1].n - a[1].n);
+    if (!list.length) { host.appendChild(el("div", "empty", "Not enough rows per source.")); return; }
+
+    list.forEach(([name, g]) => {
+      const row = el("div", "barrow");
+      row.title = name + " — " + g.on + " on criteria, " + g.off + " off";
+      row.append(el("div", "lab", name));
+      const stack = el("div", "stack");
+      [["yes", g.on], ["no", g.off]].forEach(([cls, v]) => {
+        if (v <= 0) return;
+        const seg = el("span", "seg-" + cls);
+        seg.style.width = pct(v, g.n) + "%";
+        seg.title = v + (cls === "yes" ? " on criteria" : " off criteria");
+        stack.appendChild(seg);
+      });
+      row.appendChild(stack);
+      const val = el("div", "val");
+      val.innerHTML = "<strong>" + g.off + "</strong> <em>off / " + g.n + "</em>";
+      row.appendChild(val);
+      host.appendChild(row);
+    });
+  }
+
+  /* ------------------------------- leads ------------------------------- */
+
+  // 🔴 TEMPLATE: replace these with the cities in commuting range of {{METRO}}.
+  // See Data/job-criteria.md § Location — keep the two lists consistent.
+  const LOCAL_RE = /{{LOCAL_CITY_1}}|{{LOCAL_CITY_2}}|{{LOCAL_CITY_3}}/i;
+
+  function renderLeads() {
+    const q = $("leadQ").value.trim().toLowerCase();
+    const cf = $("leadComp").value;
+    const localOnly = $("leadLocal").checked;
+
+    let list = ROWS.filter(r => r.section === "lead").filter(r => {
+      if (localOnly && !LOCAL_RE.test(r.location || "")) return false;
+      if (cf === "band" && !r.comp) return false;
+      if (cf === "inband" && !(r.comp && r.comp.min >= FLOOR && r.comp.max <= CEILING)) return false;
+      if (cf === "above" && !(r.comp && r.comp.min > CEILING)) return false;
+      if (cf === "under" && !(r.comp && r.comp.max < FLOOR)) return false;
+      if (!q) return true;
+      return (r.company + " " + r.role + " " + (r.location || "") + " " + (r.note || "")).toLowerCase().includes(q);
+    }).sort((a, b) => (b.comp?.max || 0) - (a.comp?.max || 0) || (b.found || "").localeCompare(a.found || ""));
+
+    const total = ROWS.filter(r => r.section === "lead").length;
+    $("leadCount").textContent = list.length === total ? total + " leads" : list.length + " of " + total + " leads";
+
+    buildTable($("leadTable"), [
+      { label: "Company", cls: "co", get: r => r.company },
+      { label: "Role", get: r => r.role },
+      { label: "Location", get: r => r.location },
+      { label: "Comp", cls: "num", get: r => r.comp ? r.comp.raw : null },
+      { label: "Found", cls: "date", get: r => r.found },
+      { label: "Note", cls: "wide", get: r => r.note },
+    ], list, "No leads match these filters.");
+  }
+
+  /* ------------------------------ archive ------------------------------ */
+
+  let sortKey = "company", sortDir = 1;
+  const SECTION_LABEL = {
+    conversation: "Recruiter conversation", application: "Application", lead: "Lead",
+    closed: "Closed", offcriteria: "Off-criteria", gig: "Gig / contract", other: "Other",
+  };
+
+  function renderArchive() {
+    const q = $("q").value.trim().toLowerCase();
+    const fs = $("fSection").value, fst = $("fStage").value;
+
+    let list = ROWS.filter(r => {
+      if (fs && r.section !== fs) return false;
+      if (fst && r.stage !== fst) return false;
+      if (!q) return true;
+      return (r.company + " " + r.role + " " + (r.note || "") + " " + (r.nextAction || "") + " " + (r.source || ""))
+        .toLowerCase().includes(q);
+    });
+
+    list.sort((a, b) => {
+      const av = String(a[sortKey] ?? "").toLowerCase(), bv = String(b[sortKey] ?? "").toLowerCase();
+      return av < bv ? -sortDir : av > bv ? sortDir : 0;
+    });
+
+    $("archiveCount").textContent = list.length === ROWS.length ? ROWS.length + " rows" : list.length + " of " + ROWS.length + " rows";
+
+    const cols = [
+      { label: "Company", cls: "co", key: "company", get: r => r.company },
+      { label: "Role", key: "role", get: r => r.role },
+      { label: "Section", key: "section", get: r => SECTION_LABEL[r.section] || r.section },
+      { label: "Stage", key: "stage", get: r => stagePill(r.stage) },
+      { label: "Source", key: "source", get: r => r.source },
+      { label: "Date", cls: "date", key: "applied", get: r => r.applied || r.found || r.closed },
+      { label: "Thread", get: r => threadLink(r.thread) },
+    ];
+    buildTable($("archiveTable"), cols, list, "No rows match these filters.");
+
+    const ths = $("archiveTable").querySelectorAll("thead th");
+    cols.forEach((c, i) => {
+      if (!c.key) return;
+      const th = ths[i];
+      th.classList.add("sortable"); th.tabIndex = 0; th.setAttribute("role", "button");
+      if (c.key === sortKey) { th.append(" "); th.appendChild(el("span", "arrow", sortDir === 1 ? "▲" : "▼")); }
+      const go = () => { if (sortKey === c.key) sortDir = -sortDir; else { sortKey = c.key; sortDir = 1; } renderArchive(); };
+      th.addEventListener("click", go);
+      th.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    });
+  }
+
+  function fillFilters() {
+    const fill = (sel, values, label) => {
+      sel.replaceChildren();
+      const all = el("option", null, "All"); all.value = ""; sel.appendChild(all);
+      [...values].sort().forEach(v => { const o = el("option", null, label ? (label[v] || v) : v); o.value = v; sel.appendChild(o); });
+    };
+    fill($("fSection"), new Set(ROWS.map(r => r.section)), SECTION_LABEL);
+    fill($("fStage"), new Set(ROWS.map(r => r.stage)));
+  }
+
+  /* ------------------------- company normalization ------------------------ */
+
+  const LEGAL = /\b(inc|incorporated|llc|ltd|limited|corp|corporation|plc|gmbh)\b/g;
+  function normCompany(raw) {
+    let s = (raw || "").toLowerCase();
+    s = s.replace(/\([^)]*\)/g, " ").replace(/[.,]/g, " ").replace(LEGAL, " ")
+         .replace(/^\s*the\s+/, " ").replace(/[^a-z0-9]+/g, " ").trim();
+    return s;
+  }
+
+  /* ═════════════════════ artifact round-trip: publish ═══════════════════ */
+  //
+  // publish() wants a COMPLETE replacement document and forbids serializing
+  // the live DOM. So the page re-renders itself from the tokenized copy of its
+  // own source in <script id="__TPL__">. DATA and OVERRIDES are substituted
+  // FIRST and the template LAST — otherwise the tokens inside the embedded
+  // copy get eaten and the next generation of the page comes out empty.
+
+  const encTpl = t => t.split("</script").join("<\\/script");
+  const decTpl = t => t.split("<\\/script").join("</script");
+  const jsonEsc = o => JSON.stringify(o).replace(/</g, "\\u003c");
+
+  function renderPage() {
+    const node = document.getElementById("__TPL__");
+    if (!node) throw new Error("template missing");
+    const tpl = decTpl(node.textContent);
+    return tpl
+      .replace("%%DATA%%",      () => "const PIPELINE = " + jsonEsc(PIPELINE) + ";")
+      .replace("%%OVERRIDES%%", () => "let OVERRIDES = " + jsonEsc(OVERRIDES) + ";")
+      .replace("%%TPL%%",       () => encTpl(tpl));
+  }
+
+  function countEdits() { return Object.keys(OVERRIDES.edits).length; }
+
+  function refreshBar() {
+    const bar = $("saveBar"), n = countEdits();
+    $("dirtyCount").textContent = String(n);
+    bar.hidden = READ_ONLY || (n === 0 && !dirty);
+    $("saveBtn").disabled = saving || !dirty;
+  }
+
+  function say(msg, cls) {
+    const m = $("saveMsg");
+    m.textContent = msg || "";
+    m.className = "savemsg" + (cls ? " " + cls : "");
+  }
+
+  function goReadOnly(why) {
+    READ_ONLY = true;
+    $("saveBar").hidden = true;
+    const n = $("roNote");
+    n.hidden = false;
+    n.textContent = why || "This view is read-only, so proposals cannot be saved here. " +
+      "The page still shows everything the ledger holds.";
+    document.querySelectorAll(".rev select, .rev input").forEach(c => { c.disabled = true; });
+  }
+
+  const PERMANENT = new Set(["not_writer", "not_granted", "not_declared",
+                             "consent_required", "capability_disabled", "capability_removed"]);
+
+  async function save() {
+    if (saving || READ_ONLY) return;
+    saving = true; $("saveBtn").disabled = true; say("Saving\u2026");
+
+    OVERRIDES.updated = stamp();
+    let html;
+    try { html = renderPage(); }
+    catch (e) { saving = false; refreshBar(); say("Could not rebuild the page \u2014 nothing was saved.", "bad"); return; }
+
+    try {
+      const artifact = await claude.use("artifact");
+      if (!artifact) { saving = false; goReadOnly("Saving is unavailable in this view, so proposals stay on screen only."); return; }
+      await artifact.publish(html);
+      // The shell reloads every open view to the new version, this one included.
+      dirty = false; say("Saved.", "ok");
+    } catch (err) {
+      const code = (err && err.code) || "upstream_error";
+      if (PERMANENT.has(code)) { saving = false; goReadOnly(); return; }
+      if (code === "conflict") {
+        // Routine: someone else published first and the shell is already
+        // reloading this view to the winner. Say nothing alarming.
+        say("Someone else saved first \u2014 reloading to their version.");
+      } else if (code === "too_large") {
+        say("The page is too large to save. Tell You \u2014 this needs a rebuild, not a retry.", "bad");
+      } else if (code === "rate_limited") {
+        say("Saving too often. Wait a moment, then save again \u2014 your changes are still here.", "bad");
+      } else {
+        say("Save failed (" + code + "). Your changes are still on screen; try once more.", "bad");
+      }
+    } finally {
+      saving = false; refreshBar();
+    }
+  }
+
+  function wireReview() {
+    refreshBar();
+    $("saveBtn").addEventListener("click", save);
+    $("discardBtn").addEventListener("click", () => {
+      if (!countEdits() && !dirty) return;
+      OVERRIDES.edits = {}; dirty = false; say("");
+      renderLive(); refreshBar();
+    });
+    window.addEventListener("beforeunload", e => {
+      if (dirty && !READ_ONLY) { e.preventDefault(); e.returnValue = ""; }
+    });
+    // A page opened outside the claude.ai viewer has no capability at all.
+    if (typeof claude === "undefined" || !claude || typeof claude.use !== "function") {
+      goReadOnly("Opened outside the artifact viewer, so proposals cannot be saved. Read-only.");
+    }
+  }
+
+  /* ------------------------------- boot ------------------------------- */
+
+  $("rowCount").textContent = ROWS.length.toLocaleString();
+  $("sweptDate").textContent = PIPELINE.lastSwept || "unknown";
+  document.querySelectorAll("p.lede").forEach(p => {
+    p.textContent = p.textContent.replace("{{N}}", ROWS.length);
+  });
+
+  renderTiles(); renderActions(); renderFunnel(); renderLive();
+  renderRepeats(); renderSources(); renderCriteria();
+  fillFilters(); renderLeads(); renderArchive();
+
+  wireReview();
+
+  $("q").addEventListener("input", renderArchive);
+  $("fSection").addEventListener("change", renderArchive);
+  $("fStage").addEventListener("change", renderArchive);
+  $("leadQ").addEventListener("input", renderLeads);
+  $("leadComp").addEventListener("change", renderLeads);
+  $("leadLocal").addEventListener("change", renderLeads);
+
+})();
+</script>

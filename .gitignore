@@ -1,0 +1,23 @@
+.DS_Store
+
+# ── CREDENTIALS — belt and braces ─────────────────────────────────────────
+# Nothing secret belongs in this repo. Tokens live under ~/.config/.
+# These patterns exist in case one is ever dropped in here by mistake.
+
+# Google OAuth for Tools/gmail_drafts.py — belongs in ~/.config/gmail-draft-tool/
+credentials.json
+token.json
+client_secret*.json
+
+# ClickUp personal token — belongs in ~/.config/clickup-sync/token
+clickup-token
+*.clickup-token
+.env
+
+# ── LOCAL STATE ───────────────────────────────────────────────────────────
+# Uncomment if you'd rather these stay out of git. They are sync maps, not
+# secrets — keeping them tracked makes a machine move painless, but they churn
+# on every push.
+# Tools/clickup-map.json
+# Tools/daily-map.json
+# Tools/clickup-config.json

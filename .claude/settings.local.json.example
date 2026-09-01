@@ -1,0 +1,21 @@
+{
+  "_comment": "Copy to settings.local.json and tune. This file allows the read-only and idempotent commands the job skills run constantly, so they stop prompting. Nothing here grants a write to email, the calendar, or git.",
+  "permissions": {
+    "allow": [
+      "Bash(node Dashboards/build-data.mjs:*)",
+      "Bash(node Tools/clickup-sync.mjs --dry:*)",
+      "Bash(node Tools/clickup-sync.mjs --pull:*)",
+      "Bash(node Tools/daily-sync.mjs --dry:*)",
+      "Bash(node Tools/daily-sync.mjs --pull:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(wc:*)",
+      "Bash(md5:*)"
+    ],
+    "deny": []
+  }
+}

@@ -1,0 +1,100 @@
+<title>{{FULL_NAME}} — Email Signature</title>
+<style>
+  :root { color-scheme: light dark; --bg:#fff; --fg:#1a1a1a; --muted:#666; --line:#ddd; --card:#fafafa; --accent:#2b7de9; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161616; --fg:#e8e8e8; --muted:#9a9a9a; --line:#333; --card:#1e1e1e; }
+  }
+  body { background:var(--bg); color:var(--fg); font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin:0; padding:32px 24px 64px; }
+  .wrap { max-width:860px; margin:0 auto; }
+  h1 { font-size:22px; margin:0 0 4px; letter-spacing:-.01em; }
+  .sub { color:var(--muted); margin:0 0 28px; font-size:13px; }
+  h2 { font-size:15px; margin:36px 0 6px; }
+  .stage { border:1px solid var(--line); border-radius:8px; padding:20px; background:var(--card); overflow-x:auto; }
+  .bar { display:flex; align-items:center; gap:10px; margin:14px 0 8px; flex-wrap:wrap; }
+  button { font:inherit; font-size:13px; padding:6px 12px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--fg); cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  .ok { color:#1a8f5a; font-size:13px; }
+  pre { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px; overflow-x:auto; font-size:11px; line-height:1.45; white-space:pre-wrap; word-break:break-all; max-height:240px; }
+  .rules { border-left:3px solid var(--accent); padding:2px 0 2px 14px; margin:24px 0; }
+  .warn { border-left:3px solid #d9822b; padding:2px 0 2px 14px; margin:24px 0; }
+  li { margin:5px 0; }
+  code { background:var(--card); border:1px solid var(--line); border-radius:3px; padding:1px 4px; font-size:12px; }
+</style>
+
+<div class="wrap">
+<h1>{{FULL_NAME}} — Email Signature</h1>
+<p class="sub">Template. Replace every <code>{{…}}</code> below, then <strong>select the rendered block and copy it</strong> into your mail client's signature settings. <strong>This file is the source; the client is a copy.</strong> Re-paste after any edit.</p>
+
+<div class="warn">
+  <p><strong>This signature is installed in your mail client — it is NOT appended to drafts.</strong> The Gmail connector strips every <code>&lt;img&gt;</code> tag on save: remote <code>src</code>, <code>cid:</code> inline attachment and <code>data:</code> URI alike. All three were tested together in one draft in the source repo; all three were gone.</p>
+  <p>So a drafted signature is always image-less and arrives as empty <code>&lt;a&gt;&lt;/a&gt;</code> shells beside a dangling border — <strong>broken rather than plain.</strong> Both job-search skills therefore draft with <strong>no signature at all</strong>, and you add this one at send time.</p>
+  <p><strong>Gmail web auto-inserts a signature only on a <em>fresh</em> compose</strong>, never when opening a prepared draft. Use the compose toolbar's <strong>Insert signature</strong> control. Two clicks, full signature, images intact.</p>
+</div>
+
+<h2>The signature</h2>
+<div class="bar">
+  <button onclick="copySig()">Copy rendered signature</button>
+  <button onclick="copyHtml()">Copy raw HTML</button>
+  <span id="msg" class="ok"></span>
+</div>
+
+<div class="stage">
+  <div id="sig">
+    <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.5">
+      <tr>
+        <td style="padding:0 16px 0 0;vertical-align:top">
+          <a href="{{PORTFOLIO_URL}}"><img src="{{HEADSHOT_URL}}" width="72" height="72" alt="{{FULL_NAME}}" style="display:block;border-radius:50%;border:0"></a>
+        </td>
+        <td style="padding:0;vertical-align:top;border-left:2px solid #d0d0d0">
+          <div style="padding-left:16px">
+            <div style="font-size:15px;font-weight:600;letter-spacing:-.01em">{{FULL_NAME}}</div>
+            <div style="font-size:13px;opacity:.75;padding-bottom:6px">{{CURRENT_TITLE}}</div>
+            <div style="font-size:12px;padding-bottom:6px">
+              <a href="tel:{{PHONE_TEL}}" style="text-decoration:none">{{PHONE}}</a>
+              &nbsp;&middot;&nbsp;
+              <a href="mailto:{{EMAIL}}" style="text-decoration:none">{{EMAIL}}</a>
+            </div>
+            <div style="font-size:12px">
+              <a href="{{PORTFOLIO_URL}}" style="text-decoration:none;font-weight:600">Portfolio</a>
+              &nbsp;&middot;&nbsp;
+              <a href="{{SITE_URL}}" style="text-decoration:none">Website</a>
+              &nbsp;&middot;&nbsp;
+              <a href="{{LINKEDIN_URL}}" style="text-decoration:none">LinkedIn</a>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<h2>Raw HTML</h2>
+<pre id="raw"></pre>
+
+<h2>Rules that are load-bearing</h2>
+<div class="rules">
+<ul>
+  <li><strong>No hardcoded text colors.</strong> Recipients read mail in light and dark themes. A hardcoded <code>color:#333</code> is invisible on a dark background — let the client's default win, and use <code>opacity</code>, borders and spacing for structure instead. The one border above uses a mid grey that reads on both.</li>
+  <li><strong>Never let a <code>&lt;p&gt;</code> be the only thing holding an element in the document.</strong> Third-party clients strip every <code>&lt;p&gt;</code> and flatten the body into one <code>&lt;div&gt;</code>. In the source repo the headshot was the single signature image whose sole parent was a <code>&lt;p&gt;</code> — the other three sat inside <code>&lt;a href&gt;</code> anchors and survived. <strong>Anchoring the image fixed it.</strong> That is why the <code>&lt;img&gt;</code> above is wrapped in a link.</li>
+  <li><strong>Tables, not flexbox.</strong> Mail clients are not browsers. <code>display:flex</code>, <code>grid</code> and external stylesheets do not survive; a <code>cellspacing="0"</code> table with inline styles does.</li>
+  <li><strong>Lead with the link you most want clicked</strong> — and keep <code>social.md</code> in the same order.</li>
+  <li><strong>Host the headshot somewhere permanent.</strong> A <code>data:</code> URI bloats every message and some clients reject it; a link to a file that later moves leaves a broken image on every email you ever sent.</li>
+  <li><strong>There is no settings API on any of these connectors.</strong> Installing a signature is a manual paste, once per client. Re-paste after any edit here.</li>
+</ul>
+</div>
+
+<script>
+  document.getElementById('raw').textContent = document.getElementById('sig').innerHTML.trim();
+  function flash(t){ const m=document.getElementById('msg'); m.textContent=t; setTimeout(()=>m.textContent='',2500); }
+  function copySig(){
+    const r=document.createRange(); r.selectNodeContents(document.getElementById('sig'));
+    const s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    document.execCommand('copy'); s.removeAllRanges();
+    flash('✓ Rendered signature copied — paste into your client’s signature box.');
+  }
+  function copyHtml(){
+    navigator.clipboard.writeText(document.getElementById('raw').textContent)
+      .then(()=>flash('✓ Raw HTML copied.'));
+  }
+</script>
+</div>
