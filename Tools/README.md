@@ -39,6 +39,8 @@ node Tools/personalize.mjs                 # apply
 
 ⚠️ **One-way.** Idempotent — a second run finds nothing left to do — **but it does not un-personalize.** **Run `--dry` first, and have the repo in git.**
 
+🔴 **`Tools/personalize.json` is gitignored, and that is deliberate.** **It is not a credential — but it holds a real name, email, phone number and salary expectations**, and a repo built from this template is public by default. **The `.example` file stays tracked; your filled-in copy does not.**
+
 ---
 
 ## The dashboard

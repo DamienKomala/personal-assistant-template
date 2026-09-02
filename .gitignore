@@ -14,6 +14,11 @@ clickup-token
 *.clickup-token
 .env
 
+# Your filled-in personalization values. NOT a credential, but it carries a
+# real name, email, phone and salary expectations — and a repo built from this
+# template is public by default. The .example stays tracked; your copy does not.
+Tools/personalize.json
+
 # ── LOCAL STATE ───────────────────────────────────────────────────────────
 # Uncomment if you'd rather these stay out of git. They are sync maps, not
 # secrets — keeping them tracked makes a machine move painless, but they churn

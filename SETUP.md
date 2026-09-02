@@ -19,15 +19,27 @@ ls ~/.claude/skills/docx ~/.claude/skills/pdf ~/.claude/skills/humanizer ~/.clau
 
 ---
 
-## 1. Copy the template and put it under git
+## 1. Get your own copy, under your own git history
+
+🔴 **Clone it, then cut the cord.** You want the files, **not this template's commit history and not its `origin`** — otherwise your first `git push` aims at somebody else's repo.
 
 ```bash
-cp -R "Personal Assistant Template" ~/"Job Search Assistant"
+git clone https://github.com/DamienKomala/personal-assistant-template ~/"Job Search Assistant"
 cd ~/"Job Search Assistant"
-git init && git add -A && git commit -m "Initial commit from template"
+
+rm -rf .git                                     # drop the template's history AND its remote
+git init -b main && git add -A
+git commit -m "Initial commit from template"
 ```
 
-✅ **Git is worth having even if you never push it.** **It is what makes a ledger edit revertible**, and the ledger is the only thing here that can't be regenerated.
+✅ **Git is worth having even if you never push it.** **It is what makes a ledger edit revertible**, and the ledger is the only thing here that can't be regenerated. **`node Tools/personalize.mjs` rewrites 27 files in one pass** — you want to be able to `git diff` that.
+
+⚠️ **If you'd rather keep the history** so you can pull template updates later, **skip the `rm -rf .git`** and instead rename the remote so you never push to it by accident:
+
+```bash
+git remote rename origin template               # `git pull template main` for updates
+git remote add origin <your-own-repo-url>
+```
 
 ---
 
@@ -46,6 +58,8 @@ node Tools/personalize.mjs                 # apply
 ```
 
 ✅ **An empty value is SKIPPED, not written as a blank** — so you can do this in passes as the profile firms up, and re-run `--list` to see what's left.
+
+✅ **`Tools/personalize.json` is gitignored.** It is not a credential, **but it holds a real name, email, phone and salary expectations** — and a repo built from this template is public by default. **The `.example` stays tracked; your copy does not.**
 
 🔴 **TWO TOKENS ARE PROTECTED AND THE TOOL REFUSES TO TOUCH THEM. Do not replace them by hand either:**
 
