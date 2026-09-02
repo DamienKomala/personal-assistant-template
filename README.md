@@ -10,7 +10,7 @@ A **Claude Code job-search assistant**, packaged as a template. It mines a Gmail
 
 **This template assumes you already know what a skill is, what `CLAUDE.md` does, and how connectors are wired up.** It is a finished, opinionated assistant — **not a tutorial**, and reading it cold is the wrong first move.
 
-**The groundwork it grew out of: [Claude Code: The Complete Course](https://www.udemy.com/course/claude-code-the-complete-course/) on Udemy.** It covers the base assistant setup — skills, `CLAUDE.md`, MCP servers, connectors — which is the layer underneath everything here.
+**The groundwork it grew out of: [Claude Code: The Complete Course](https://www.udemy.com/share/10f84v3@drYLxMp9QtxQlidpsfYl29Cmi1ea2Iq7fca1WA6wrJivWfTVAnmorm0qAtt6cPAT/) on Udemy.** It covers the base assistant setup — skills, `CLAUDE.md`, MCP servers, connectors — which is the layer underneath everything here.
 
 ✅ **Do the course first, then clone this.** The parts of this repo worth having are the **guardrails and the failure log**, and those only make sense once you know what they are guarding.
 
