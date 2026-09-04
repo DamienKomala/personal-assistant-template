@@ -1,0 +1,289 @@
+<title>Interview Brief — worked example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+/* ── tokens: complete light palette on bare :root ─────────────────────── */
+:root{
+  color-scheme: light;
+  --paper:      #f6f7f9;   /* cool paper, blue-biased neutral */
+  --card:       #ffffff;
+  --ink:        #101519;
+  --ink-2:      #48545f;
+  --ink-3:      #7b8792;
+  --rule:       #dde2e8;
+  --rule-firm:  #c3ccd5;
+  --accent:     #1f5c8b;   /* drafting-ink blue */
+  --accent-soft:#e8f0f7;
+  --flag:       #a8481a;   /* site-plan annotation red */
+  --flag-soft:  #f8ece5;
+  --good:       #2c6a50;
+  --good-soft:  #e6f0ea;
+  --shadow:     0 1px 2px rgba(16,21,25,.06), 0 4px 14px rgba(16,21,25,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --paper:#0f1418; --card:#161d23; --ink:#eef2f5; --ink-2:#a9b6c1; --ink-3:#7c8996;
+    --rule:#242e37; --rule-firm:#33404b;
+    --accent:#6ba7d8; --accent-soft:#16293a;
+    --flag:#e08a5c; --flag-soft:#2e1e16;
+    --good:#63b892; --good-soft:#15271f;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:#0f1418; --card:#161d23; --ink:#eef2f5; --ink-2:#a9b6c1; --ink-3:#7c8996;
+  --rule:#242e37; --rule-firm:#33404b;
+  --accent:#6ba7d8; --accent-soft:#16293a;
+  --flag:#e08a5c; --flag-soft:#2e1e16;
+  --good:#63b892; --good-soft:#15271f;
+  --shadow:none;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Source Serif 4",Georgia,serif; font-size:17px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+h1,h2,h3,.eyebrow,.stat b,.step-n{font-family:Archivo,"Helvetica Neue",sans-serif}
+
+.wrap{max-width:720px;margin:0 auto;padding:0 22px 88px}
+
+/* ── header ───────────────────────────────────────────────────────────── */
+header.mast{padding:44px 0 0}
+.kicker{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+h1{font-size:clamp(34px,7vw,50px);line-height:1.03;letter-spacing:-.026em;font-weight:700;
+  margin:0 0 16px;text-wrap:balance}
+.dek{font-size:19px;line-height:1.5;color:var(--ink-2);margin:0 0 30px;max-width:60ch}
+
+/* the three facts you need in the room */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;
+  background:var(--rule);border:1px solid var(--rule);border-radius:3px;overflow:hidden;margin-bottom:12px}
+.fact{background:var(--card);padding:15px 17px 17px}
+.fact .k{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:5px}
+.fact .v{font-family:Archivo,sans-serif;font-size:19px;font-weight:600;line-height:1.22;
+  letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.fact .s{font-size:13.5px;color:var(--ink-2);line-height:1.35;margin-top:3px}
+
+.rec{display:flex;gap:10px;align-items:flex-start;background:var(--flag-soft);
+  border:1px solid var(--flag);border-radius:3px;padding:12px 15px;margin-bottom:40px;
+  font-size:14.5px;line-height:1.5}
+.rec b{font-family:Archivo,sans-serif;color:var(--flag)}
+
+/* ── sections ─────────────────────────────────────────────────────────── */
+section{padding-top:38px;border-top:1px solid var(--rule);margin-top:38px}
+section:first-of-type{border-top:none;margin-top:0}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 9px}
+h2{font-size:clamp(23px,4vw,29px);line-height:1.16;letter-spacing:-.019em;font-weight:700;
+  margin:0 0 14px;text-wrap:balance}
+h3{font-size:17px;font-weight:600;letter-spacing:-.006em;margin:26px 0 7px}
+p{margin:0 0 16px}
+p:last-child{margin-bottom:0}
+strong{font-weight:600}
+em.term{font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:.9em;
+  background:var(--accent-soft);color:var(--accent);padding:1px 5px;border-radius:2px}
+
+.lede{font-size:19px;line-height:1.5;color:var(--ink-2)}
+
+/* the one thing that changed */
+.turn{background:var(--card);border:1px solid var(--rule-firm);border-left:3px solid var(--accent);
+  border-radius:3px;padding:22px 24px;box-shadow:var(--shadow)}
+.turn h3{margin-top:0}
+
+/* process stepper — a real sequence, so it earns numbering */
+ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;
+  background:var(--rule);border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+ol.steps li{background:var(--card);padding:13px 16px;display:grid;
+  grid-template-columns:26px 1fr auto;gap:13px;align-items:baseline;font-size:15px}
+ol.steps li.now{background:var(--accent-soft)}
+.step-n{font-size:12px;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums}
+ol.steps li.now .step-n{color:var(--accent)}
+.step-tag{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--accent);white-space:nowrap}
+
+/* fit table */
+.fit{display:flex;flex-direction:column;gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.fit-row{background:var(--card);padding:15px 17px}
+.fit-ask{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--accent);
+  display:block;margin-bottom:6px;line-height:1.45}
+.fit-say{font-size:15.5px;line-height:1.5}
+
+/* plain lists */
+ul.plain{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px}
+ul.plain li{padding-left:19px;position:relative;font-size:15.5px;line-height:1.52}
+ul.plain li::before{content:"";position:absolute;left:0;top:.62em;width:7px;height:1.5px;
+  background:var(--rule-firm)}
+ul.plain li.flag::before{background:var(--flag);height:2px}
+
+/* asks */
+.asks{display:flex;flex-direction:column;gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.ask{background:var(--card);padding:14px 17px}
+.ask q{font-size:16px;font-style:normal;quotes:"“" "”";display:block;margin-bottom:5px}
+.ask .why{font-size:13.5px;color:var(--ink-2);line-height:1.45}
+
+.money{background:var(--good-soft);border:1px solid var(--good);border-radius:3px;
+  padding:16px 19px;font-size:15.5px;line-height:1.55}
+.money b{font-family:Archivo,sans-serif;color:var(--good)}
+
+footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--rule);
+  font-size:13px;color:var(--ink-3);line-height:1.55}
+footer a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="kicker">Worked example · fictional company and people</p>
+  <h1>Northwind Screen Brief</h1>
+  <p class="dek">A reference implementation for <span class="mono">/interview-brief</span>. Every name, figure and quotation below is invented. Keep the structure and the theme-token architecture; replace the content and re-pitch the accent to the employer&rsquo;s world.</p>
+
+  <div class="rec" style="margin-bottom:26px">
+    <div><b>This file is a template, not a real brief.</b> &ldquo;Northwind Freight&rdquo;, its staff and its product do not exist. The section order, the token system and the tone are the parts worth copying.</div>
+  </div>
+
+  <div class="facts">
+    <div class="fact">
+      <span class="k">When</span>
+      <div class="v">Tue 14 Oct, 11:00 AM</div>
+      <div class="s">11:00–11:30 AM PDT · Zoom</div>
+    </div>
+    <div class="fact">
+      <span class="k">Who</span>
+      <div class="v">A. Rivera</div>
+      <div class="s">Manager, Talent Acquisition</div>
+    </div>
+    <div class="fact">
+      <span class="k">Published band</span>
+      <div class="v">$150K–$260K</div>
+      <div class="s">Base <em>and</em> bonus, plus equity</div>
+    </div>
+  </div>
+
+  <div class="rec">
+    <div><b>The call is recorded.</b> Assume it is transcribed and read by people who were not in the room. Answers have to stand without you there to explain them. <em>(Include this block only when the employer actually records — never as boilerplate.)</em></div>
+  </div>
+</header>
+
+<section>
+  <p class="eyebrow">What changed since you applied</p>
+  <h2>The referral came from the operator, not a contact</h2>
+  <div class="turn">
+    <p><strong>This section exists because researching people is the highest-value step in the skill.</strong> In the real run this template came from, a contact recorded in the ledger as nothing but an email address turned out to be the company&rsquo;s Chief Operating Officer — which reframed the entire opportunity.</p>
+    <p>Write what the lookup actually changed: the person&rsquo;s title, tenure and route into the role, and what that means for how the file was opened. <strong>Then say plainly what it does and does not buy</strong> — a strong referral means the recruiter opened the file knowing who vouched; it does not mean the job is won.</p>
+  </div>
+  <h3>Still owed, and it is yours</h3>
+  <p>Anything owed to a friend, a client or a personal referral contact goes here, named and undrafted. <strong>The skill never writes those messages.</strong></p>
+</section>
+
+<section>
+  <p class="eyebrow">Where this call sits</p>
+  <h2>One of three rounds, and the shortest</h2>
+  <ol class="steps">
+    <li><span class="step-n">01</span> <span>Recruiter screen — background, motivation, logistics, comp range</span> <span class="step-tag">You are here</span></li>
+    <li><span class="step-n">02</span> <span>Hiring manager — the person who owns this reporting line</span> <span></span></li>
+    <li><span class="step-n">03</span> <span>Panel — the wider team</span> <span></span></li>
+  </ol>
+  <p style="margin-top:16px"><strong>Numbering is used here because the rounds are a real sequence.</strong> Do not number sections that are not.</p>
+  <p><strong>Calibrate for the room you are actually in.</strong> A career recruiter runs a fit-and-filter conversation, not a craft interview — lead with clarity and sector fluency, and save the deep reasoning for round two. State which kind of interviewer this is and what follows from it.</p>
+</section>
+
+<section>
+  <p class="eyebrow">The company, in terms you can use</p>
+  <h2>What they sell, and what shipped recently</h2>
+  <p>Two or three sentences on the business — what it does, for whom, roughly how big, how funded. Then the part that earns its place:</p>
+  <p><strong>Anything shipped in the last six months, especially if the role is named for it.</strong> A brief written from company boilerplate misses this, and it is usually the most useful thing in the document.</p>
+  <ul class="plain">
+    <li><strong>Product line one</strong> — what it does, in the customer&rsquo;s vocabulary rather than the company&rsquo;s.</li>
+    <li><strong>Product line two</strong> — with a real unit or figure where one exists: <em class="term">a domain term</em>, a throughput number, a document type.</li>
+    <li><strong>Product line three</strong> — and the shape underneath, if several share one.</li>
+  </ul>
+  <p style="margin-top:18px">Close by naming <strong>the underlying problem shape</strong> and tying it to real prior work, so the fit section has somewhere to land.</p>
+</section>
+
+<section>
+  <p class="eyebrow">The fit</p>
+  <h2>What they asked for, and what you say</h2>
+  <p class="lede">Quote the requirement verbatim from the posting, then answer it from the profile and impact files. Never a generic strength, never an invented one.</p>
+  <div class="fit">
+    <div class="fit-row">
+      <span class="fit-ask">&ldquo;A requirement, quoted exactly as the posting words it&rdquo;</span>
+      <div class="fit-say">The specific prior work that answers it, named — employer, product, outcome. Lead with the outcome rather than the artefact.</div>
+    </div>
+    <div class="fit-row">
+      <span class="fit-ask">&ldquo;A second requirement, quoted&rdquo;</span>
+      <div class="fit-say">A different piece of real experience. One claim, one story — repeating the same project across four rows reads as a thin record.</div>
+    </div>
+    <div class="fit-row">
+      <span class="fit-ask">&ldquo;A requirement with no genuine match&rdquo;</span>
+      <div class="fit-say"><strong>Say so.</strong> Give the honest bridge — adjacent experience, or a plain statement that it is a gap. Manufacturing a match here is the one failure this skill cannot recover from.</div>
+    </div>
+  </div>
+  <h3>Address the level question before they do</h3>
+  <p>Where experience substantially exceeds the stated bar, that invites a quiet question about level and cost. <strong>Answer it with scope rather than seniority:</strong> name what the posting says the role owns, and say that is what you want to own.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Money</p>
+  <h2>Read the band, do not anchor on it</h2>
+  <div class="money">
+    <p style="margin-bottom:12px"><b>State what the band actually includes</b> — base only, base plus bonus, or base plus bonus plus equity. A very wide spread on one requisition usually means the ceiling is level- and bonus-loaded rather than reachable.</p>
+    <p style="margin:0">Then give the one useful comparison: <strong>how the floor sits against the goal figure.</strong> That is enough for a first call.</p>
+  </div>
+  <ul class="plain" style="margin-top:20px">
+    <li>If asked for expectations on a first call, <strong>the published band is the answer</strong>. Nothing is gained by naming a number inside it on day one.</li>
+    <li class="flag">Keep prior compensation in reserve. Several US states bar an employer from <em>asking</em> salary history while allowing the applicant to volunteer it — where that holds, it is worth more late than early. <strong>Jurisdiction-specific, and not legal advice.</strong></li>
+    <li>Where the law provides it, a pay scale can be requested in writing after an initial interview. Useful when several conversations pass with no figure.</li>
+  </ul>
+</section>
+
+<section>
+  <p class="eyebrow">Your questions</p>
+  <h2>Ask these</h2>
+  <p class="lede">Calibrate to the interviewer&rsquo;s actual role. Asking a recruiter about team structure is fine; asking them to defend a technical trade-off is not.</p>
+  <div class="asks">
+    <div class="ask">
+      <q>Which surface does this role pick up first?</q>
+      <div class="why">Say what the answer would tell them. A question without a stated purpose is filler.</div>
+    </div>
+    <div class="ask">
+      <q>Who does this role report to, and how big is the team today?</q>
+      <div class="why">Confirms who round two is with — a recruiter can always answer this.</div>
+    </div>
+    <div class="ask">
+      <q>What does the panel round look like — a presentation, or a working session?</q>
+      <div class="why">Practical, and it means preparing the right thing rather than both.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Watch for</p>
+  <h2>Four things not to do</h2>
+  <ul class="plain">
+    <li class="flag"><strong>Competitive positioning stays in round two.</strong> Knowing the landscape is an asset when asked and a liability when volunteered — in a screen it reads as positioning against a would-be employer.</li>
+    <li class="flag"><strong>Do not oversell tooling.</strong> Naming a limitation you have designed around is stronger than listing tools you have used.</li>
+    <li class="flag"><strong>Do not lean on a referral twice.</strong> Mention it once, warmly, early — then let the conversation stand on its own.</li>
+    <li class="flag"><strong>Keep the recording in mind if there is one.</strong> The transcript is the artefact that reaches the panel.</li>
+  </ul>
+  <p style="margin-top:18px"><strong>Four is about right.</strong> More reads as nagging, and the section loses its force.</p>
+</section>
+
+<footer>
+  <p>Worked example for <span class="mono">/interview-brief</span>. Northwind Freight, its staff and its product are invented; the figures are illustrative. Replace all content, keep the structure.</p>
+  <p style="margin-top:8px">Mark sourced facts against indicative ones in real briefs: an employer-published band is a fact, candidate-reported process detail is not.</p>
+</footer>
+
+</div>

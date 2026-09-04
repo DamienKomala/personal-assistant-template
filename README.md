@@ -27,6 +27,7 @@ A **Claude Code job-search assistant**, packaged as a template. It mines a Gmail
 | **`/job-pipeline`** | Tracks stages, surfaces applications gone quiet, drafts follow-ups | Ledger writes; **Gmail untouched** |
 | **`/tailor-application`** | Tailors resume and cover letter to one role, from real experience only | Writes to the assets directory |
 | **`/job-search`** | Searches job boards, excluding anything already known | **Search-only** |
+| **`/interview-brief`** | Prep brief for one interview — the people, the product, the fit, what not to say. **Published as an Artifact.** | **Research-only.** Contacts no one |
 | **`/triage-inbox`** | Categorizes the *non-job* inbox | Draft-only |
 | **`/manage-calendar`** | Reviews the calendar, proposes events | **Proposal-only** |
 | **`/board`** *(optional)* | Projects the ledger onto a ClickUp board | `--pull` **never writes markdown** |

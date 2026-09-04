@@ -90,6 +90,8 @@ In the source repo `pipeline.md` twice climbed past **292KB** and blew the read 
 - **`/emailreply`** — draft a reply to ONE email, or sweep for threads awaiting one. **Drafting only.** The fast path carved out of `/emailjobsearch` so answering two emails doesn't cost a full sweep. 🔴 **Its only Gmail write is `create_draft`** — no stars, no labels, no archiving, no ledger writes. **`/emailjobsearch` keeps ownership of all filing, so the two never file the same thread twice.**
 - **`/job-pipeline`** — track stages, surface applications gone quiet, draft follow-ups. Draft-only.
 - **`/tailor-application`** — tailor resume and cover letter to a specific role. **Never invents experience.**
+
+- **`/interview-brief`** — a prep brief for ONE interview, published as an Artifact and read on a phone before the call. **Research and drafting only; it contacts no one.** 🔴 **Its highest-value step is researching THE PEOPLE, not the company** — a recruiter's own background tells you whether you are in a fit-and-filter call or a craft conversation, and that changes what the brief leads with. ✅ **It matches the job description's own phrases to `Data/me.md` and `Context/impact.md`** *(the same never-invent guardrail `/tailor-application` runs on)*, **reads the comp band honestly**, and carries a **what-not-to-say** section. ⚠️ **It labels employer-published facts against candidate-reported ones.** 🔴 **It never drafts a message owed to a friend, a client, or a personal referral contact** — it names the item and leaves it. `reference-brief.html` in the skill directory is a fictional worked example.
 - **`/job-search`** — search job boards, excluding anything already in the pipeline or inbox. **Search-only.**
 
 **General:**
