@@ -1,6 +1,6 @@
 # Draft Audit
 
-**The Gmail connector cannot delete a draft.** Clearing stale ones is manual, or done with `Tools/gmail_drafts.py`. **This file holds the procedure and the two evidentiary corrections that make it necessary.**
+✅ **The Gmail connector can now delete a draft (`delete_draft`, by draft id — still only on {{FIRST_NAME}}'s say-so).** **What it cannot do is tell you which drafts were already sent** — that is the verdict this file and `Tools/gmail_drafts.py` exist for. **This file holds the procedure and the two evidentiary corrections that make it necessary.**
 
 ---
 
@@ -69,7 +69,7 @@ Setup and the OAuth traps: [`../Tools/README.md`](../Tools/README.md).
 
 ⚠️ **Orphan threads arise because `update_draft` has no reply-to parameter and rewriting a threaded draft moves it to a new thread.** 🔴 **That is a defect, not a technique — never create one to gain a delete path.**
 
-### What does NOT work, so nobody re-tries it
+### HISTORY — what did NOT work before `delete_draft` existed
 
 - **`trash_message` with a draft id** → `Invalid id value`. **It fails safely — it does not hit the wrong message.**
 - **`apply_sensitive_message_label`** needs a **message** id, **and the connector never exposes one for a draft.** `list_drafts` returns only a draft id; `search_threads` returns empty for `in:draft`; `get_thread` omits drafts from the thread.

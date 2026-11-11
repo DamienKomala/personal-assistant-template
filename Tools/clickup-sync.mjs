@@ -8,6 +8,7 @@
  *   node Tools/clickup-sync.mjs --pull           # ClickUp -> divergence REPORT (never writes the ledger)
  *   node Tools/clickup-sync.mjs --push --force   # overwrite board-side edits from the ledger
  *   node Tools/clickup-sync.mjs --capture "text" # add one ad-hoc task to the Daily list
+ *   node Tools/clickup-sync.mjs --close <taskId> # close one ad-hoc (captured) task in the Daily list
  *
  * 🔴 THE BOARD IS A PROJECTION, NOT A LEDGER. `Job Search/*.md` is the source of
  *    truth, exactly as it is for Dashboards/job-tracker.html. On any conflict the
@@ -44,7 +45,7 @@ const argv = process.argv.slice(2);
 const has = f => argv.includes(f);
 const argOf = f => { const i = argv.indexOf(f); return i === -1 ? null : argv[i + 1]; };
 
-const MODE = has("--push") ? "push" : has("--pull") ? "pull" : has("--capture") ? "capture" : has("--clear-dates") ? "clear-dates" : "dry";
+const MODE = has("--push") ? "push" : has("--pull") ? "pull" : has("--capture") ? "capture" : has("--close") ? "close" : has("--clear-dates") ? "clear-dates" : "dry";
 const LIMIT = argOf("--limit") ? parseInt(argOf("--limit"), 10) : Infinity;
 // --force re-pushes every row even when its hash is unchanged. Needed because a
 // normal push is hash-based, so an edit made ON THE BOARD is never corrected by
@@ -313,6 +314,7 @@ async function main() {
   // ledger, so it skips the parse entirely and stays cheap enough for
   // /emailreply to call without turning into a sweep.
   if (MODE === "capture") return capture();
+  if (MODE === "close") return closeCaptured();
 
   say("");
   say("── structural validation ──────────────────────────────────────────");
@@ -653,6 +655,45 @@ async function capture() {
   console.log(`\n✅ captured to Daily: "${body.name}"`);
   console.log(`   ${res.url || res.id}`);
   console.log(`   ⚠️  Not logged to the ledger. Run /emailjobsearch if this changes a stage.\n`);
+}
+
+/* --close <taskId>
+ * The other half of --capture: close ONE ad-hoc task in the Daily list once the
+ * thing it reminded about is done. Added 2026-10-01.
+ *
+ * 🔴 It refuses any task another tool owns, because closing it here would fight
+ *    that tool's source of truth:
+ *    • in `clickup-map.json` → a ledger row; change its stage in pipeline.md
+ *    • in `daily-map.json`   → a Daily.md checkbox; tick the box, then `daily-sync --push`
+ *    • not in the Daily list → not a capture at all
+ * It sends only `status`, so name, tags and notes are left as they are. */
+async function closeCaptured() {
+  const id = argOf("--close");
+  if (!id) { console.error("\n🔴 --close needs a task id: --close 86bcbe2q3\n"); process.exit(1); }
+
+  const owned = [[MAP_PATH, "a ledger row — change its stage in Job Search/pipeline.md and --push"],
+                 [join(dirname(MAP_PATH), "daily-map.json"), "a Daily.md checkbox — tick it there and run daily-sync --push"]];
+  for (const [path, why] of owned) {
+    const map = readJson(path, {});
+    if (Object.values(map).some(v => v && v.taskId === id)) {
+      console.error(`\n🔴 ${id} is ${why}. Not closing it here.\n`); process.exit(1);
+    }
+  }
+
+  const token = loadToken();
+  if (!token) { console.error("\n🔴 No ClickUp token — see Tools/README.md.\n"); process.exit(1); }
+
+  const task = await api(token, `/task/${id}`);
+  if (!task.list || task.list.name !== DAILY_LIST) {
+    console.error(`\n🔴 "${task.name}" is in ${task.list ? task.list.name : "an unknown list"}, not ${DAILY_LIST}. --close only closes captures.\n`);
+    process.exit(1);
+  }
+  const was = (task.status && task.status.status) || "?";
+  if (was.toLowerCase() === "closed") { console.log(`\nℹ️  already closed: "${task.name}"\n`); return; }
+
+  await api(token, `/task/${id}`, { method: "PUT", body: { status: "Closed" } });
+  console.log(`\n✅ closed in Daily: "${task.name}"  (was: ${was})`);
+  console.log(`   ${task.url || id}\n`);
 }
 
 /* 🔴 pull REPORTS. It never writes markdown. The ledger is edited by a human or

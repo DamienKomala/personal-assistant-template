@@ -35,7 +35,7 @@ If {{FIRST_NAME}} opens a connector-written draft in Spark, Airmail, or a simila
 - **No hardcoded text colors.** Recipients read mail in light and dark themes; a hardcoded `color: #333` becomes invisible on a dark background. Let the client's default win, and use borders and spacing for structure instead.
 - **Never let a `<p>` be the only thing holding an element in the document.** In the source repo the headshot was the one signature image whose sole parent was a `<p>`; the other three sat inside `<a href>` anchors. **The client stripped every `<p>`, and only the headshot vanished.** Anchoring it fixed it.
 - **Lead with the link you most want clicked.** Put the portfolio first if that is the primary work-sample destination, and **keep `social.md` in the same order.**
-- **A table with its own internal spacing is exempt from the `<br><br>` paragraph rule** in `../Prompts/reply-tone.md` — append it untouched, don't restyle its margins to match.
+- **A table with its own internal spacing is exempt from the `<div>` paragraph rule** in `../Prompts/reply-tone.md` — append it untouched, don't restyle its margins to match.
 
 ## Deploying it
 

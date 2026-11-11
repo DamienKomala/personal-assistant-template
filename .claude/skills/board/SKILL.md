@@ -33,6 +33,7 @@ description: Push the job-search ledger onto the ClickUp board, or pull a diverg
 |---|---|
 | "push the board", "sync ClickUp", "update the board" | `node Tools/clickup-sync.mjs --push` |
 | "what's on the board?", "what did I change?", "does it match?" | `node Tools/clickup-sync.mjs --pull` |
+| "that reminder is done", "close the X card" | `node Tools/clickup-sync.mjs --close <taskId>` — **captures only**; it refuses a ledger row or a `Daily.md` checkbox |
 | "add a task", "remind me to X" | `node Tools/clickup-sync.mjs --capture "X"` ⚠️ **`--due` is legitimate HERE and nowhere else — it is a date {{FIRST_NAME}} gave, not one derived from a receipt.** |
 | "the dates are wrong", "strip the dates" | `node Tools/clickup-sync.mjs --clear-dates` — one-time pass over every tracked task |
 | anything ambiguous, or first run of the day | `node Tools/clickup-sync.mjs --dry` first |

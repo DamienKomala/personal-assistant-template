@@ -11,6 +11,8 @@
 | `Tools/clickup-sync.mjs` | Projects the ledger onto a ClickUp board | 🔴 `--pull` **never writes markdown** |
 | `Tools/daily-sync.mjs` | Two-way sync between `Daily.md` checkboxes and a ClickUp list | ✅ `--pull` writes **one character per line** |
 | `Tools/dashboard-overrides.mjs` | Reads stage proposals made *on* the published dashboard | 🔴 **Never writes markdown** |
+| `Tools/sweep-brief.mjs` | **Generates `Job Search/sweep-brief.md`** — the compact context `/emailjobsearch` reads instead of the whole ledger and sender taxonomy | Writes only the brief; `--dry` writes nothing |
+| `Tools/ats-scan.py` | Scans public Greenhouse / Ashby / Lever job-board APIs for live postings matching a title regex. **Extend the company slug lists freely** | Read-only — no sign-in, no applying |
 | `Tools/gmail_drafts.py` | Deletes a Gmail draft **only** when it can prove a matching message already went out | Dry run by default; `--delete` required |
 
 🔴 **ONE PARSER, ONE ROW KEY, THREE CONSUMERS.** `Dashboards/lib/ledger.mjs` is shared by the dashboard, the ClickUp board and the overrides round-trip — **it owns both the markdown parsing and the stable row key.** 🔴 **Never fork either.** **A second parser is how the applications table silently died in the source repo; a forked key is how two projections stop pointing at the same row.**
@@ -142,6 +144,7 @@ node Tools/clickup-sync.mjs --dry       # validate + report. No token, no networ
 node Tools/clickup-sync.mjs --push      # upsert every row
 node Tools/clickup-sync.mjs --pull      # what changed on the board that the ledger doesn't know about?
 node Tools/clickup-sync.mjs --capture "chase X on Y" [--due YYYY-MM-DD]
+node Tools/clickup-sync.mjs --close <taskId>   # close ONE captured task; refuses ledger rows and Daily.md checkboxes
 node Tools/clickup-sync.mjs --clear-dates
 ```
 
@@ -243,6 +246,10 @@ Every synced checkbox carries `<!--cu:xxxxxxxx-->` at the end of its line. **It 
 
 ⚠️ **Carry the anchor forward when rewriting an item.** Drop it and the item re-syncs as a new task while the old one is reported as an orphan. **Nothing is lost; it is noise.**
 
+🆕 **AND THE MIRROR: DEMOTING A CHECKBOX TO A PLAIN BULLET MUST STRIP THE ANCHOR IN THE SAME EDIT.** `collect()` only ever sees `- [ ]` / `- [x]` lines, so an anchor on a plain bullet can never match and reports as an orphan on every push. 🔴 **The failure is warning fatigue, not data loss** — a permanent false orphan looks identical to a real dropped anchor. ✅ **`--push` now names these separately** (*"anchor(s) sit on a PLAIN BULLET — demoted, not dropped"*), so they can be told apart. ⚠️ **Close the board task before demoting if it is still open.**
+
+🔴 **A DUPLICATED anchor is worse than either orphan case**: two checkboxes claim one task, only one can win, and a tick coming back lands on the wrong line. It happens when a sweep copies a line into a new block without removing the old one. **`--push` flags it**; fix by hand — keep the anchor on the canonical line, delete it from the other.
+
 ### What it will not do
 
 - **Never deletes a board task** — a missing anchor is *reported* as an orphan, because the usual cause is a sweep rewriting a line.
@@ -254,7 +261,9 @@ Every synced checkbox carries `<!--cu:xxxxxxxx-->` at the end of its line. **It 
 
 ## `gmail_drafts.py` — delete drafts whose content was already sent
 
-**The Gmail connector has no `delete_draft` tool.** This closes that gap **outside** the connector, by hitting the Gmail API directly.
+✅ **The connector now has `delete_draft`, so deleting is no longer this tool's reason to exist. Its value is the VERDICT** — proving a draft's content already went out on the same thread, which the connector cannot do. **Use it to decide; either path can delete.** *(It was built when the connector had no delete tool at all, and hits the Gmail API directly.)*
+
+⚠️ **A revoked token re-authorises itself.** Google revokes refresh tokens weekly while an OAuth app sits unpublished in *Testing*; the tool catches the `RefreshError` and falls through to the browser flow instead of wedging until someone deletes `token.json` by hand.
 
 ```bash
 uv run --with google-api-python-client --with google-auth-oauthlib Tools/gmail_drafts.py          # DRY RUN — reports verdicts, deletes nothing
@@ -324,3 +333,35 @@ uv run --with google-api-python-client --with google-auth-oauthlib Tools/gmail_d
 **For each draft it finds the candidate sent messages on the same thread and to the same recipient, then scores the draft body against each.** **It deletes only above a high similarity threshold**, and it reports every score so a refusal is legible rather than mysterious.
 
 🔴 **Dry run by default. `--delete` is required and is never passed by a skill.**
+
+---
+
+## `sweep-brief.mjs` — the compact context an `/emailjobsearch` sweep reads
+
+`node Tools/sweep-brief.mjs` writes `Job Search/sweep-brief.md`: the live rows, a company index, every sender pattern, and the rejection phrases. `--dry` prints the size report and writes nothing.
+
+**Why it exists.** In the source repo a sweep's fixed context — before a single email was read — measured **~158K tokens**, and two files were 85% of it: `Context/job-sources.md` (about two-thirds provenance) and `Job Search/pipeline.md` (753 rows, 148 of them live). **Both are lookups and were being read as prose.** Splitting `pipeline.md` had made it *readable*, not *cheap* — a different problem with a different fix. The brief took the fixed cost to **~33K tokens, a 79% cut**.
+
+**What it is.** A projection, exactly like the dashboard and the ClickUp board. `pipeline.md` and `job-sources.md` remain the source of truth and win every conflict. It is regenerated at the top of every sweep and never hand-edited.
+
+🔴 **It contains no second parser.** It imports `Dashboards/lib/ledger.mjs` — the same one the dashboard and the board use.
+
+⚠️ **It is lossy on purpose.** `Next action` is clipped to 150 characters and all dossier narrative is dropped. When a row's provenance actually matters, `grep` the real file. That is the exception, not the sweep.
+
+### 🔴 Verify an extractor by COMPLETENESS, never by sampling
+
+**The first sender extractor used a regex anchored to the whole table cell and silently dropped 38 of 66 patterns** — real cells carry trailing markdown like `` `*@firm.net` *(via `*@user.dice.com`)* ``. **A spot-check for well-known senders passed anyway, because those names also appear in the live rows.** ✅ **The check that actually worked was a set-difference against every backticked address in the source, expecting zero missing.** The same lesson applies to the rejection phrases: the extractor reads only the *Phrases confirmed* subsection, because the same section also quotes **non-rejection** wording that must never trigger an archive.
+
+---
+
+## ⚠️ An `artifact-changed` notification is usually your own publish echoing back
+
+**Publishing the dashboard subscribes the session to its live changes, and a few minutes later a notification may arrive saying the artifact *"appears to have been republished elsewhere"* and that your copy is stale.** 🔴 **That wording is generic and it fires on your own publish.**
+
+✅ **The three-step check — do it before assuming a conflict:**
+
+1. **`node Tools/dashboard-overrides.mjs <fetched.html>`.** If it reports no proposals, nobody used the *Your call* column and there is no browser edit to merge.
+2. **Compare row counts**, not file sizes — `grep -c '"company":'` on both files.
+3. **Diff the two files.** If the only difference is a leading `<!doctype html><html><head>…</head><body>` and a trailing `</body></html>`, they are identical — the Artifact host adds that skeleton at publish time.
+
+🔴 **Why it matters:** reading the published artifact back can cost 20K+ tokens, and a needless republish burns a version and re-arms the same notification. **When `dashboard-overrides.mjs` DOES report proposals, the documented round trip applies unchanged.**

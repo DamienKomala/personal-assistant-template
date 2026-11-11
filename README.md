@@ -27,13 +27,14 @@ A **Claude Code job-search assistant**, packaged as a template. It mines a Gmail
 | **`/job-pipeline`** | Tracks stages, surfaces applications gone quiet, drafts follow-ups | Ledger writes; **Gmail untouched** |
 | **`/tailor-application`** | Tailors resume and cover letter to one role, from real experience only | Writes to the assets directory |
 | **`/job-search`** | Searches job boards, excluding anything already known | **Search-only** |
+| **`/custom-apply`** | Applies to ONE posting: tailored resume, humanized cover letter, form autofilled in Chrome from `Data/application-answers.md`. **Stops at the review screen.** | **Submits only on your word.** Never a password, account or CAPTCHA |
 | **`/interview-brief`** | Prep brief for one interview — the people, the product, the fit, what not to say. **Published as an Artifact.** | **Research-only.** Contacts no one |
 | **`/triage-inbox`** | Categorizes the *non-job* inbox | Draft-only |
 | **`/manage-calendar`** | Reviews the calendar, proposes events | **Proposal-only** |
 | **`/board`** *(optional)* | Projects the ledger onto a ClickUp board | `--pull` **never writes markdown** |
 | **`/daily`** *(optional)* | Syncs `Daily.md` checkboxes to ClickUp and back | Writes **one character** per changed line |
 
-🔴 **Nothing here can send email.** The Gmail connector has no send tool. **The design is draft-then-hand-over**, and every skill says so.
+🔴 **Nothing here sends email.** ⚠️ **The claude.ai Gmail connector now HAS `send_message` and `reply` tools, so the tool no longer blocks a send — policy is the only gate.** **The design is draft-then-hand-over**, every skill says so, and none of them may call a send tool without the owner's explicit instruction for that specific message.
 
 ---
 
@@ -116,7 +117,8 @@ cp -R /tmp/anthropic-skills/document-skills/pdf  ~/.claude/skills/
 
 | Connector | Status | Notes |
 |---|---|---|
-| **Gmail** | 🔴 **Required.** | Drafts, labels, stars, archive, search. **No send tool** — that is a hard limit, and the whole design assumes it. **No `delete_draft` tool either** — see `Tools/README.md`. |
+| **Gmail** | 🔴 **Required.** | Drafts, labels, stars, archive, search. 🔴 **Has `send_message` / `reply` — policy-gated only: never send without the owner's explicit instruction for that specific message.** **Has `delete_draft`** (by draft id) — still only on the owner's say-so; `Tools/gmail_drafts.py` is what proves a draft was already sent. |
+| **Microsoft 365 (Outlook)** | Optional | A **second mailbox** for `/emailjobsearch` step 2b — **read and draft only**. Worth it if your resume or site carries a second address recruiters reply to. Also holds `Mail.Send`: same policy, never send. |
 | **Google Calendar** | Recommended | Needed by `/manage-calendar`. ⚠️ **Also the only place an interview booked through a recruiter's scheduling page ever appears.** |
 | **Google Drive** | Optional | Only if the resume lives in Google Docs |
 
@@ -145,7 +147,7 @@ Job Search/              The ledger — four files, one ledger
 Dashboards/              Published Artifact + build script + the shared parser
 Tools/                   Executables that do what markdown cannot
                          — including personalize.mjs, which fills in the template
-.claude/skills/          The nine skills
+.claude/skills/          The eleven skills
 ```
 
 **Markdown is the substrate; `Dashboards/` and `Tools/` are the exceptions** — and **both are views or actuators over the markdown, never a source of truth.** 🔴 **If the dashboard, the board and `Job Search/pipeline.md` disagree, the ledger is right and the other two are stale.**
@@ -154,10 +156,11 @@ Tools/                   Executables that do what markdown cannot
 
 | File | What's in it | When to read it |
 |---|---|---|
-| `pipeline.md` | Active conversations, live applications, gig/contract, **and the Notes section** | **Every sweep, whole** |
+| `pipeline.md` | Active conversations, live applications, gig/contract, **and the Notes section** | **A sweep reads the generated `sweep-brief.md` instead, and `grep`s this** |
 | `pipeline-dossiers.md` | Long-form history behind live rows | **Never in a sweep** |
 | `pipeline-leads.md` | The un-worked backlog | **Only when working leads** — a sweep appends |
 | `pipeline-archive.md` | Closed rows and sweep narratives | **Never whole — `grep` it** |
+| `sweep-brief.md` | 🆕 **Generated** by `node Tools/sweep-brief.mjs` — live rows, company index, sender patterns, rejection phrases. **A projection; never edited** | **Every sweep, whole** — it is ~80% cheaper than the two files it replaces |
 
 🔴 **Read `pipeline.md` § Notes once before doing any ledger work.** It documents every silent-failure mode this toolchain has produced — **a column shift that raised the row count while corrupting 112 rows, a build that reported success while writing nothing, a migration stub that double-counted, a table heading that silently swallowed fifteen leads.** **That section is the single most valuable thing in this template.**
 

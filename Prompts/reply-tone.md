@@ -40,9 +40,11 @@ The defaults below describe a warm, accommodating, detailed professional voice. 
 
 - **Put a blank line between every paragraph.** A wall of text doesn't read like a person.
 
-  🔴 **USE `<br><br>` BETWEEN PARAGRAPHS IN `htmlBody`. DO NOT USE `<p>` TAGS AT ALL — not even with inline margins.**
+  🔴 **WRAP EACH PARAGRAPH IN ITS OWN `<div>` AND PUT AN EMPTY `<div><br></div>` BETWEEN THEM. STILL NO `<p>` TAGS.** ✅ **This is exactly what Gmail web emits when you type, so a draft opens as if it was written there: Enter mid-paragraph behaves normally, and Outlook gets no `<p>` margins to double the spacing.** **Shape:** `<div>Hi Name,</div><div><br></div><div>First paragraph.</div><div><br></div><div>Thanks,</div><div>{{FIRST_NAME}}</div>` — **the sign-off lines are separate `<div>`s with no spacer between them.** *(Settled in the source repo by a three-way test in Gmail web and Outlook.)*
 
-  This was corrected in the source repo from the sent HTML of a real message, not from theory. **Third-party mail clients (Spark, Airmail, and their family) strip every `<p>` and flatten the body into one `<div>`, taking the inline margin with it** — so the drafted spacing collapses entirely and the sender ends up re-adding blank lines by hand before every send. `<br><br>` is plain enough that nothing strips it.
+  ⚠️ **This assumes drafts are sent from Gmail web or Outlook — never OPENED in a third-party client** (see below and `Data/signature.md`). **If you do compose in such a client, fall back to `<br><br>`, which is plain enough that nothing strips it.**
+
+  **HISTORY — why `<p>` is banned.** This was corrected in the source repo from the sent HTML of a real message, not from theory. **Third-party mail clients (Spark, Airmail, and their family) strip every `<p>` and flatten the body into one `<div>`, taking the inline margin with it** — so the drafted spacing collapses entirely and the sender ends up re-adding blank lines by hand before every send. `<br><br>` is plain enough that nothing strips it.
 
   ⚠️ **The tell, if it ever needs re-diagnosing:** the sent HTML opens `<html xmlns=...><head><title></title></head><body><div name="messageBodySection">`. **That is not Gmail web** — Gmail emits a bare `<div dir="ltr">` with no document wrapper. `messageBodySection` is a desktop/mobile client signature.
 

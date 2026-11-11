@@ -1,6 +1,6 @@
 ---
 name: emailjobsearch
-description: Mine recent Gmail for real job opportunities — recruiters, human referrals, application status, and leads buried in aggregator digests. Runs end to end in auto mode: applies role labels, stars real opportunities, archives confirmed rejections, drafts every reply worth writing, updates the ledger and Daily.md, and rebuilds the dashboard — all without stopping to ask. Replies stay draft-only; sends, deletes and unsubscribes still need confirmation.
+description: Mine recent Gmail (and, optionally, a second Outlook mailbox) for real job opportunities — recruiters, human referrals, application status, and leads buried in aggregator digests. Runs end to end in auto mode: applies role labels, stars real opportunities, archives confirmed rejections, drafts every reply worth writing, updates the ledger and Daily.md, and rebuilds the dashboard — all without stopping to ask. Replies stay draft-only; sends, deletes and unsubscribes still need confirmation.
 ---
 
 # Email Job Search
@@ -20,6 +20,7 @@ Before auto mode existed in the source repo, sweeps routinely closed with *"want
 | **Draft the wrong-role redirects** rather than offering to | 4 |
 | **Update `Daily.md`** in the same pass as the ledger | 8 |
 | **Update `Context/job-sources.md`** with new senders, phrases and resolution tricks | 9 |
+| **Regenerate the sweep brief** | 1 |
 | **Rebuild and republish the dashboard** | 10 |
 | **Push the ClickUp board** *(if configured)* | 11 |
 | **Sync `Daily.md` to the ClickUp Daily list** *(if configured)* | 12 |
@@ -88,11 +89,46 @@ Four Gmail mutations happen during the sweep, unprompted. **All are recoverable 
 
 🔴 **AND IF A DUPLICATE HAS ALREADY BEEN CREATED, DO NOT TRASH ITS THREAD.** A correctly-threaded reply sits on the recruiter's real thread, **and trashing that destroys their original mail.** ✅ **Empty the draft with `update_draft` first** — that moves it onto a thread of its own, leaving the real one untouched — **and only then is `trash_thread` safe.**
 
+## 🔴 Gmail rewrites every link a connector writes into a draft
+
+**At SAVE time, every `href` becomes `https://www.google.com/url?q=…&source=gmail&ust=…&sa=E`.** Corporate mail filters strip that wrapper, and the link fails silently on both ends — in the source repo a recruiter could not open the resume for a day, and the PDFs had to be attached by hand.
+
+- ✅ **A URL typed by hand in Gmail web is NOT rewritten.**
+- ✅ **`get_draft` shows what the recipient will get: if the `href` is wrapped, it is already compromised** — the visible text still looks clean, which is why this went unnoticed for weeks.
+
+**So whenever a draft carries a link, list its thread under "Still needs you": *re-paste the links in Gmail web before sending*.** If a recruiter has already reported a link failing, stop linking on that thread — tell {{FIRST_NAME}} to attach the PDFs by hand, and 🔴 **never write "attached"**, because nothing here can attach a file.
+
 ---
 
 ## Steps
 
-### 1. Read context
+### 1. Read the brief, not the ledger
+
+```bash
+node Tools/sweep-brief.mjs      # regenerate, then read Job Search/sweep-brief.md
+```
+
+🔴 **Read `Job Search/sweep-brief.md`, `Data/job-criteria.md`, `Prompts/reply-tone.md`, and `Data/me.md`. That is the whole of step 1.**
+
+**Why:** in the source repo a sweep's fixed context was measured at **~158K tokens before a single email was read**, and `pipeline.md` plus `Context/job-sources.md` were 85% of it. **Both are lookups and were being read as prose.** The brief carries the live rows, a company index, every sender pattern, and the rejection phrases — **a 79% cut**, generated from the same `Dashboards/lib/ledger.mjs` the dashboard and board use, so it adds no second parser.
+
+🔴 **It is a projection.** `pipeline.md` and `job-sources.md` stay the source of truth and win every conflict; the brief is regenerated, never edited. ⚠️ **It is lossy on purpose** — `Next action` is clipped and dossier narrative is dropped. **When a row's provenance actually matters, `grep` the real file.**
+
+| File | Sweep behaviour |
+|---|---|
+| `Job Search/sweep-brief.md` | ✅ **Read it whole. Generated — never edit it.** |
+| `Job Search/pipeline.md` | ⚠️ **`grep` for provenance; WRITE rows to it.** No longer read whole. |
+| `Context/job-sources.md` | ⚠️ **`grep` when a sender needs its full entry; APPEND findings at step 9.** |
+| `Job Search/pipeline-leads.md` | ⚠️ **Append only — do not read.** New digest finds go here at step 4. |
+| `Job Search/pipeline-dossiers.md` | ⚠️ **Never read in a sweep.** Open one section only if a row's provenance is genuinely in question. |
+| `Job Search/pipeline-archive.md` | ⚠️ **`grep` only, never read whole.** |
+| `Context/business.md`, `Context/impact.md`, `Context/mail.md` | ⚠️ **Load ONLY when actually drafting**, not to triage. |
+
+⚠️ **The brief's company index says only whether a ROW EXISTS. The repeat check is still a Gmail search** (step 7).
+
+<details><summary>Before the brief existed</summary>
+
+### 1 (old). Read context
 
 `Data/me.md`, `Data/job-criteria.md`, `Context/job-sources.md`, `Context/business.md`, `Context/impact.md`, `Prompts/reply-tone.md`, `Context/mail.md`, and `Job Search/pipeline.md`.
 
@@ -107,6 +143,8 @@ Four Gmail mutations happen during the sweep, unprompted. **All are recoverable 
 
 **Why this is a rule and not a preference:** in the source repo `pipeline.md` hit **292KB** and blew past the read cap, **so this step was silently impossible** and a sweep had to reconstruct the ledger from `grep` and `sed`. **Loading the leads table during an inbox sweep is what got it there.** ⚠️ **If `pipeline.md` starts approaching 200KB, split cells into the dossiers file before adding more.**
 
+</details>
+
 ### 2. Search
 
 🔴 **`in:anywhere` first — never `in:inbox` alone.** Last 14 days unless {{FIRST_NAME}} specifies otherwise: `in:anywhere newer_than:14d -in:draft`.
@@ -118,6 +156,17 @@ Four Gmail mutations happen during the sweep, unprompted. **All are recoverable 
 **Then run a second, explicit pass over unread inbox mail:** `in:inbox is:unread -in:draft`, **no date bound.** `in:anywhere` covers the inbox in principle, but only within the window and only for senders the taxonomy already knows about. **This pass is the one that most often surfaces a sender missing from `Context/job-sources.md`.**
 
 🔴 **Job-related only.** Bucket and file a thread from this pass **only if it is job mail.** Anything else belongs to `/triage-inbox` — **leave it untouched, unlabelled, unstarred, unarchived, and don't mention it in the output.** **Two skills labelling the same thread is worse than one skill missing it.**
+
+### 2b. 📬 Sweep the second mailbox — Outlook *(skip if the Microsoft 365 connector isn't set up)*
+
+**Worth it whenever a resume, portfolio or site carries a second address.** Anyone replying to an application can land there. **In the source repo an entire interview process — screen booking, a five-person onsite invite, the confirmation — ran in Outlook while every Gmail sweep reported the row as "waiting on the recruiter."** Volume is usually tiny, so the pass is cheap.
+
+- **Search:** `outlook_email_search` with `afterDateTime` = 14 days ago, no `folderName` (all folders), and **page with `nextOffset` until it stops** — never classify from a partial page. Then `order: "newest"` alone for the current Inbox, which catches older unread mail.
+- **Read:** `read_resource` on the returned `mail:///messages/…` URI. **The `summary` field is a preview — classify from the body**, same bar as Gmail.
+- **Calendar:** `outlook_calendar_search` over the next 14 days. **Interview bookings often arrive as events**, and `showAs: "tentative"` means {{FIRST_NAME}} has not accepted — put that under **Still needs you**.
+- **Same buckets, same ledger, same `Daily.md`.** Mark the row's `Next action` with **📬 Outlook** so nobody looks for the thread in Gmail. **The repeat check covers both:** Gmail `in:anywhere "<company>"` plus `outlook_email_search` `query: "<company>"`.
+- **Drafting:** `outlook_create_reply_draft` on the message so the draft stays threaded. Same voice, same line-editing pass, **no signature.** ⚠️ **Read the draft back with `read_resource` and check the `href`s before calling it clean.**
+- 🔴 **READ AND DRAFT ONLY. The four auto-mutations above are Gmail's and do NOT extend to Outlook.** No labels, moves, flags, categories, trash, or filters. Rejections there get a `Closed` row and stay put. **The connector holds `Mail.Send` — never call `outlook_send_mail` or `outlook_send_draft`.**
 
 ### 3. Classify every thread into exactly one bucket
 
@@ -146,9 +195,16 @@ Voice comes from `Prompts/reply-tone.md`, **not `Prompts/soul.md`.**
 
 🔴 **NO SIGNATURE.** End the body at the sign-off line and stop. **The reason is mechanical, not stylistic: the Gmail connector strips every `<img>` on save**, so an appended signature is always image-less and arrives as empty `<a></a>` shells beside a dangling border. **{{FIRST_NAME}}'s signature is installed in the client and added at send time** — see `Data/signature.md`. **Appending a broken one would just give him/her something to delete first.**
 
+✅ **Run the line-editing pass before saving** — `writing-clearly-and-concisely`, then `grammar-check` with the real objective (mechanical fixes only; discard its tone and phrasing opinions). **Skipping it is how the source repo's owner ended up hand-correcting comma splices and missing Oxford commas on three drafts in three weeks.**
+
 **Recruiter wrong-role** — ✅ **In auto mode, DRAFT the redirect; don't offer to.** A short note that declines on role specifically, names the target titles plus the adjacent ones from `Data/job-criteria.md`, states the location rule, links portfolio/resume/impact profile, and asks what work in {{FIRST_NAME}}'s discipline is on their desk. **Quote no rate unless they asked** — a redirect that volunteers a number answers a question nobody put.
 
-⚠️ **One judgment call survives, and it is not "should I ask": it is whether this desk carries that work at all.** **Draft it** when the firm plausibly has relevant reqs on another desk (evidence: a past posting, an alert, a second recruiter from the same firm). **Skip it and just label off-criteria** when the firm demonstrably has none — a design redirect to a pure engineering-staffing shop is **a letter to an empty room.** **Say which call you made and why.**
+⚠️ **One judgment call survives, and it is not "should I ask": it is a TWO-PART TEST, and BOTH legs must pass.**
+
+1. **Does the firm carry this kind of work at all?** **Draft it** when the firm plausibly has relevant reqs on another desk (evidence: a past posting, an alert, a second recruiter from the same firm). **Skip it** when the firm demonstrably has none — a design redirect to a pure engineering-staffing shop is **a letter to an empty room.**
+2. **Does the firm ANSWER?** Run `in:sent to:<domain>` and count unanswered messages before drafting. **A firm with the right desk that never replies will not help any more than one without it.**
+
+⚠️ **Leg 1 is only ever PROVISIONAL.** In the source repo the reference example of a firm failing leg 1 was falsified weeks later by a real, relevant req from the same domain. **Re-test on new mail; never read an old verdict off a file.** **Say which call you made and why.**
 
 ⚠️ **Drafting a redirect does NOT make the thread archivable.**
 
@@ -158,9 +214,9 @@ Voice comes from `Prompts/reply-tone.md`, **not `Prompts/soul.md`.**
 
 **Application status** — write a new `Job Search/pipeline.md` row or a stage update on an existing one. **Relay receipts often carry company, role, location and comp band — use them.**
 
-**Rejection** — apply the `Jobs` label, remove `INBOX`, and write a `Closed` row.
+**Rejection** — apply the `Jobs` label **and a `Jobs/Rejections` sublabel** (one place to see every company that answered; resolve its id with `list_labels`), remove `INBOX`, and write a `Closed` row. **Ambiguous closures get neither the sublabel nor the archive** — the sublabel means confirmed, same bar as the archive.
 
-🔴 **Archive only on a verbatim rejection phrase found in the message BODY.** The list and the load-bearing test are in `Context/job-sources.md`. **Subject lines don't count and neither does inference.** **This is the one auto-applied step that can hide something {{FIRST_NAME}} needed to see** — in the source repo a Workday digest headed *"Follow up on Req-48986"* was a rejection, and the identical wrapper carries live requests for action.
+🔴 **Archive only on a verbatim rejection phrase found in the message BODY.** The list and the load-bearing test are in `Context/job-sources.md`. **Subject lines don't count, inference doesn't count, and a tracking token in a URL is the wrapper rather than the text** — a LinkedIn rejection can carry an application-ack subject and an empty body with `application_rejected` only inside its links. **This is the one auto-applied step that can hide something {{FIRST_NAME}} needed to see** — in the source repo a Workday digest headed *"Follow up on Req-48986"* was a rejection, and the identical wrapper carries live requests for action.
 
 ⚠️ **If the body is ambiguous, borderline, or you're reading the outcome off the wrapper rather than the text — don't archive.** **Label it, star it, report it.** **Cancelled and paused requisitions are NOT rejections** — see the four non-rejection shapes in `job-sources.md`.
 
@@ -217,11 +273,15 @@ Add a `## 📬 Sweep — <date>` block at the top of the sweep sections, move th
 
 🔴 **IF THE CLICKUP `Daily` SYNC IS CONFIGURED: carry the `<!--cu:xxxxxxxx-->` anchor forward whenever you rewrite a checkbox.** It renders as nothing and **it is that item's identity on the board** — the thing that lets a tick on a phone come back to the right line. **Rewording a carried-forward item is safe as long as the anchor rides along with the text.** Drop it and the item re-syncs as a NEW task while the old one is reported as an orphan. ✅ **New checkboxes need no anchor** — step 12 stamps them. **Never invent one, never copy one from another item, never put one on a plain bullet.**
 
+🔴 **AND THE MIRROR RULE: when you DEMOTE a checkbox to a plain bullet, STRIP its anchor in the same edit.** When a task stops being a task — the question got answered, the constraint got recorded — it becomes a finding, and findings are plain bullets. ⚠️ **`daily-sync` builds its task list from CHECKBOXES ONLY, so an anchor left on a plain bullet is invisible to it and reports as an orphan on every push, forever** — and that false orphan looks identical to a real dropped anchor, which trains you to ignore the one warning that matters. **Close the board task first if it is still open**, then demote and strip.
+
 ### 9. Update `Context/job-sources.md` — auto mode, no asking
 
 **The sender taxonomy is what makes the NEXT sweep cheap, and a finding left only in a narrative block has to be rediscovered.**
 
 Write back: **a new sender** (which bucket and the tell that decides it) · **a new rejection phrase** (added **only after** it archived on the load-bearing test) · **a new resolution trick** (a tenant slug, a footer link, a job-id pairing) · **a corrected assumption** — **mark the old text superseded rather than deleting it**, so the reasoning stays auditable.
+
+⚠️ **Put a recurring signal's adjudication HERE, not only in `Daily.md`.** `Daily.md` prunes, and a pruned answer leaves the stimulus in the inbox to be re-litigated on the next sweep.
 
 ### 10. Rebuild the dashboard — auto mode, no asking
 
@@ -285,7 +345,7 @@ JD present but location unclear · borderline rejection wording · duplicate thr
 
 ## Output
 
-- **Real opportunities** — recruiter, company, role, location, fit note. **The ones that matter, first.**
+- **Real opportunities** — recruiter, company, role, location, fit note. **The ones that matter, first.** **Tag anything from the second mailbox 📬 Outlook.**
 - **Needs a decision** — wrong-role pitches worth a redirect, human referrals, anything unclassified or ambiguous.
 - **Drafted** — company, role, what each draft covers. **Note that drafts are saved to Gmail Drafts, never sent.**
 - **Pipeline updates** — rows added or moved, and any `Daily.md` change that follows.
@@ -294,7 +354,7 @@ JD present but location unclear · borderline rejection wording · duplicate thr
   - Threads starred
   - Threads archived, split into **rejections**, **digests**, and **answered recruiter threads**, each with the sender named
 - **Not archived, needs your call** — rejections too ambiguous to auto-archive, plus cancelled or paused requisitions. Labelled and starred, still in the inbox.
-- **Still needs you** — drafts waiting to be sent, unsubscribes, portal logins, ATS security codes, deadlines. 🔴 **This is a list of things only {{FIRST_NAME}} can do, not a list of things the sweep declined to do.**
+- **Still needs you** — drafts waiting to be sent, unsubscribes, portal logins, ATS security codes, deadlines, **and every draft carrying a link that needs re-pasting in Gmail web.** 🔴 **This is a list of things only {{FIRST_NAME}} can do, not a list of things the sweep declined to do.**
 
 **End with the state, not a menu.** In auto mode the sweep has already drafted the redirects, written both files, refreshed `job-sources.md`, rebuilt the dashboard and pushed the board — **so say so plainly and stop.**
 

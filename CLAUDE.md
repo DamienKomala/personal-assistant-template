@@ -49,7 +49,7 @@ Read [Prompts/soul.md](Prompts/soul.md) and follow it — **it governs how Claud
 
 | File | What's in it | Sweep behaviour |
 |---|---|---|
-| **`Job Search/pipeline.md`** | Active conversations, live applications, gig/contract, notes | ✅ **Read it whole, every sweep.** The only one a sweep needs by default. |
+| **`Job Search/pipeline.md`** | Active conversations, live applications, gig/contract, notes | ⚠️ **A sweep no longer reads it whole** — it reads the generated `Job Search/sweep-brief.md` (`node Tools/sweep-brief.mjs`) and `grep`s this file for provenance. **Still the source of truth; rows are written here.** |
 | **`Job Search/pipeline-dossiers.md`** | Long-form history behind live rows | ⚠️ **A sweep never reads it.** Open one section when a row's provenance matters. **Holds no tables and is deliberately not parsed.** 🔴 **On any conflict `pipeline.md` wins.** |
 | **`Job Search/pipeline-leads.md`** | The un-worked backlog | ⚠️ **A sweep APPENDS and does not read.** `/job-search` is the one skill that must read it. |
 | **`Job Search/pipeline-archive.md`** | Every closed row and every sweep narrative | ⚠️ **Never read whole — `grep` it.** |
@@ -91,6 +91,7 @@ In the source repo `pipeline.md` twice climbed past **292KB** and blew the read 
 - **`/job-pipeline`** — track stages, surface applications gone quiet, draft follow-ups. Draft-only.
 - **`/tailor-application`** — tailor resume and cover letter to a specific role. **Never invents experience.**
 
+- **`/custom-apply`** — apply to ONE job: tailors through the `/tailor-application` rules, runs three voice passes on the cover letter (`humanizer` → voice check against `Prompts/reply-tone.md` → `grammar-check`, mechanical fixes only), then autofills the form in Chrome from **[Data/application-answers.md](Data/application-answers.md)** and records each new answer there. 🔴 **It stops at the review screen and submits only on {{FIRST_NAME}}'s word.** Never a password, an account, or a CAPTCHA. **Invoking it is the Chrome request.**
 - **`/interview-brief`** — a prep brief for ONE interview, published as an Artifact and read on a phone before the call. **Research and drafting only; it contacts no one.** 🔴 **Its highest-value step is researching THE PEOPLE, not the company** — a recruiter's own background tells you whether you are in a fit-and-filter call or a craft conversation, and that changes what the brief leads with. ✅ **It matches the job description's own phrases to `Data/me.md` and `Context/impact.md`** *(the same never-invent guardrail `/tailor-application` runs on)*, **reads the comp band honestly**, and carries a **what-not-to-say** section. ⚠️ **It labels employer-published facts against candidate-reported ones.** 🔴 **It never drafts a message owed to a friend, a client, or a personal referral contact** — it names the item and leaves it. `reference-brief.html` in the skill directory is a fictional worked example.
 - **`/job-search`** — search job boards, excluding anything already in the pipeline or inbox. **Search-only.**
 
@@ -137,7 +138,7 @@ In the source repo `pipeline.md` twice climbed past **292KB** and blew the read 
 ### Write boundaries
 
 - 🔴 **No credentials in this repo, ever.** See `.gitignore`. Tokens live in `~/.config/`.
-- 🔴 **Drafting is the default for every skill, and sending is not technically possible from here.** The Gmail connector has **no send tool**. **Never present a draft as sent.**
+- 🔴 **Drafting is the default for every skill. Sending IS technically possible** — the Gmail connector has `send_message` and `reply`, and the Microsoft 365 connector has `outlook_send_mail` / `outlook_send_draft`. **The tool no longer blocks a send, so this rule is the only thing that does: never send without {{FIRST_NAME}}'s explicit instruction for that specific message.** Auto mode is not that instruction. **Never present a draft as sent.**
 - 🔴 **Every delete, archive, unsubscribe, calendar write, and file-share still needs explicit confirmation** — **with one documented exception**, below.
 - ✅ **Carve-out: `/emailjobsearch` applies labels, stars, and archives without asking.** **A deliberate exception, scoped to that one skill and to exactly four mutations:** `Career/*` role labels · `STARRED` · removing `INBOX` from **confirmed rejections and already-mined digests** · removing `INBOX` from **recruiter threads already replied to**.
   - **All are recoverable — an archived thread stays searchable.**
@@ -148,9 +149,11 @@ In the source repo `pipeline.md` twice climbed past **292KB** and blew the read 
 - 🔴 **Never auto-unsubscribe.** There's no tool for it anyway — **propose candidates.**
 - **Where the write boundary sits for the job skills:** **local file edits apply directly** — the ledger and tailored material are git-tracked or disposable, so they're revertible. **Every Gmail mutation needs confirmation first**, except the carve-out above.
 
-### The Gmail connector cannot delete a draft
+### Deleting drafts — the connector can now, but it cannot tell you WHICH
 
-⚠️ **There is no `delete_draft` tool, and the Drafts folder is not a to-do list.**
+✅ **The connector now has `delete_draft`** (takes the draft id from `list_drafts`; deletes only the draft, the thread's real messages are untouched). 🔴 **Deleting a draft still needs {{FIRST_NAME}}'s say-so every time, and it never becomes an automatic step in any skill.** ⚠️ **What the connector still cannot do is tell you a draft was already SENT** — check `in:sent` on the thread first, or let `Tools/gmail_drafts.py` give the verdict.
+
+⚠️ **The Drafts folder is not a to-do list.** *The bullets below record how the gap was worked around before `delete_draft` existed; the thread-trash rule still holds.*
 
 - **`apply_sensitive_message_label` needs a MESSAGE id**, and the connector never exposes one for a draft: `list_drafts` returns only a draft id, `search_threads` returns empty for `in:draft`, and `get_thread` omits drafts from the thread. **Passing a draft id to the trash tool fails safely with `Invalid id value`** — it does not hit the wrong message.
 - 🔴 **Never trash the draft's THREAD as a substitute — with one proven exception.** **A stale draft usually sits on a thread carrying real correspondence**, and trashing it destroys the other party's original mail. ✅ **THE EXCEPTION: when the thread contains NOTHING BUT THE DRAFT**, `trash_thread` deletes it and destroys nothing else. 🔴 **It still needs {{FIRST_NAME}}'s say-so in the moment**, and it is a trash rather than a purge (recoverable 30 days). ⚠️ **Verify "draft-only" with `list_drafts`** — it returns each draft's `threadId`. `get_thread` returns a permission error on such a thread, so read access is neither required nor evidence.
@@ -160,6 +163,8 @@ In the source repo `pipeline.md` twice climbed past **292KB** and blew the read 
 Full procedure: **[Job Search/draft-audit.md](Job%20Search/draft-audit.md)**.
 
 ### Outgoing mail
+
+- 🔴 **Gmail rewrites every link a connector writes into a draft** — at SAVE time, into `https://www.google.com/url?q=…&source=gmail&ust=…&sa=E`. Corporate mail filters strip that wrapper and the link fails silently on both ends. ✅ **A URL typed by hand in Gmail web is not rewritten**, and `get_draft` shows what the recipient will get: **if the `href` is wrapped, it is already compromised** even though the visible text looks clean. **So any drafted email carrying a link goes on the "Still needs you" list: *re-paste the links in Gmail web before sending*.**
 
 - 🔴 **NO SIGNATURE ON DRAFTS.** **The Gmail connector strips EVERY `<img>` on save** — proven in one controlled test with a remote `src`, a `cid:` attachment and a `data:` URI all sent together, **all three gone.** So a drafted signature is always image-less and arrives as empty `<a></a>` shells beside a dangling border. ✅ **{{FIRST_NAME}}'s signature is installed in the mail client and added at send time.** **Both `/emailjobsearch` and `/emailreply` draft without one, and they agree.** Canonical markup: [Data/signature.html](Data/signature.html); reasoning: [Data/signature.md](Data/signature.md).
 - 🔴 **Resume and impact profile go as NAMED HYPERLINKS, not attachments.** No available tool can attach a local file, and base64 inline costs **~63K tokens for the pair on every single email** — which is why links won. **If a recruiter insists on real files, {{FIRST_NAME}} attaches them by hand** from `{{ASSETS_DIR}}/Resumes/`. 🔴 **Never write "attached" unless a file is genuinely attached.**

@@ -4,7 +4,7 @@
 >
 > | File | What's in it | When to read it |
 > |---|---|---|
-> | **`pipeline.md`** *(this file)* | Active recruiter conversations, live applications, gig/contract, notes | **Every sweep. Read it whole.** |
+> | **`pipeline.md`** *(this file)* | Active recruiter conversations, live applications, gig/contract, notes | **The source of truth.** A sweep reads the generated `sweep-brief.md` instead and `grep`s this. |
 > | **[`pipeline-dossiers.md`](pipeline-dossiers.md)** | Long-form history behind live rows — reasoning, corrections, superseded analysis | **Never in a sweep.** Open one section when a row's provenance matters. |
 > | **[`pipeline-leads.md`](pipeline-leads.md)** | The un-worked lead backlog | **Only when working leads.** A sweep *appends*; it never reads. |
 > | **[`pipeline-archive.md`](pipeline-archive.md)** | Every sweep narrative and every closed row | **Never read whole — `grep` it.** Provenance, not state. |
@@ -205,7 +205,7 @@ If {{FIRST_NAME}} edits drafts in a third-party client (Spark, Airmail, and simi
 
 🔴 **Therefore: the Drafts folder is not a to-do list and must never be reported as one.** **Thread state is the truth; the folder is an artifact of an editing habit.**
 
-⚠️ **The same clients strip `<p>` tags and flatten the body into one `<div>`, taking any inline margin with it.** That is why `Prompts/reply-tone.md` requires `<br><br>` between paragraphs rather than `<p>`.
+⚠️ **The same clients strip `<p>` tags and flatten the body into one `<div>`, taking any inline margin with it.** That is why `Prompts/reply-tone.md` bans `<p>` — paragraphs are Gmail-native `<div>`s with an empty `<div><br></div>` between them.
 
 ### ⚠️ CONCURRENT SESSIONS FORK THE LEDGER, AND ONE COLLISION DESTROYED LIVE ROWS
 

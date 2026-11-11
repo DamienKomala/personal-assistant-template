@@ -53,6 +53,7 @@ PROTECTED: set[str] = set()
 
 
 def service():
+    from google.auth.exceptions import RefreshError
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
     from google_auth_oauthlib.flow import InstalledAppFlow
@@ -63,9 +64,18 @@ def service():
         creds = Credentials.from_authorized_user_file(str(TOKEN), SCOPES)
 
     if not creds or not creds.valid:
+        # A merely *expired* token refreshes silently. A *revoked* one raises,
+        # and Google revokes weekly while this OAuth app stays unpublished in
+        # Testing — so catch it and fall through to the browser flow rather
+        # than wedging the tool until someone deletes token.json by hand.
+        refreshed = False
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+                refreshed = True
+            except RefreshError as exc:
+                print(f"stored token unusable ({exc}) — re-authorising in browser...")
+        if not refreshed:
             if not CLIENT_SECRET.exists():
                 sys.exit(
                     f"No OAuth client at {CLIENT_SECRET}\n"

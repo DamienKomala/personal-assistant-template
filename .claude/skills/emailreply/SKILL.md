@@ -23,7 +23,7 @@ Pick by what {{FIRST_NAME}} said when invoking. **If it's ambiguous, ask** — i
 1. 🔴 **NO SIGNATURE.** Do not append the block from `Data/signature.html`. **Do not write a plain-text sign-off block either.** {{FIRST_NAME}} adds a signature at send time, from the mail client where it is installed. **End the body at the sign-off line and stop.** ✅ **`/emailjobsearch` does the same, so the two skills agree** — the connector strips every `<img>` on save, so an appended signature is always image-less and arrives broken.
 2. 🔴 **NO STAR, NO PIN.** Apply no `STARRED` label, ever. **Some clients render a Gmail star as a pin, and pinned drafts cause problems.** If a thread genuinely needs attention beyond the draft, **say so in the output — the output is the flag, not the mailbox.**
 3. 🔴 **NO OTHER GMAIL MUTATIONS.** No `Career/*` labels, no `Jobs` label, no archiving, no unsubscribing, no trashing. **`/emailjobsearch` owns all of that; this skill's only Gmail write is `create_draft`.** **Two skills filing the same thread is worse than one skill leaving it alone.**
-4. 🔴 **NEVER SEND.** There is no send tool on this connector and that is fine — **the design is draft-then-hand-over.** **Never describe a draft as sent.**
+4. 🔴 **NEVER SEND.** The Gmail connector has `send_message` and `reply`, so **this rule is the only thing stopping a send** — do not call either tool from this skill. **The design is draft-then-hand-over.** **Never describe a draft as sent.**
 5. ⚠️ **No ledger writes, no `Daily.md` writes.** If a draft changes a stage or creates a commitment worth recording, **name it at the end under "Worth logging"** and let {{FIRST_NAME}} decide whether to run `/emailjobsearch` or `/job-pipeline`. **Don't open `pipeline.md` to check — that's the cost this skill exists to avoid.**
 6. ✅ **The one thing "Worth logging" MAY write is a board capture** *(only if ClickUp is configured)*:
 
@@ -32,6 +32,8 @@ Pick by what {{FIRST_NAME}} said when invoking. **If it's ambiguous, ask** — i
    ```
 
    **This is a deliberate, narrow widening of rule 3 and nothing else moves.** It adds a card to the ClickUp **Daily** list so the item stops evaporating between sweeps. 🔴 **Still not a ledger write, not a `Daily.md` write, not a Gmail mutation.** ⚠️ **Still print the "Worth logging" list in the output** — the capture is a reminder that the item exists, not a substitute for telling {{FIRST_NAME}}.
+
+   ✅ **When a captured item is done, close its card with `node Tools/clickup-sync.mjs --close <taskId>`.** The capture prints the task URL; the id is its last segment. **It closes captures only:** it refuses any task that belongs to a ledger row or a `Daily.md` checkbox, and anything outside the Daily list.
 
 ## Before drafting anything — OR reporting a draft as unsent — check `in:sent`
 
@@ -109,7 +111,7 @@ Background and the delete procedure: `Job Search/draft-audit.md`.
    - 🔴 **Anything from a friend or family member.** {{FIRST_NAME}} answers those personally.
    - Threads where a `SENT` message already exists
 3. **Report the shortlist first, then draft.** One line each: sender, what they asked, and whether you're drafting.
-4. ⚠️ **Cap it at 5 drafts per run** unless told otherwise. **More than that and the drafts folder becomes the problem instead of the inbox — and the connector cannot delete a draft.** If there are more than 5, draft the 5 most time-sensitive and list the rest.
+4. ⚠️ **Cap it at 5 drafts per run** unless told otherwise. **More than that and the drafts folder becomes the problem instead of the inbox — and every extra draft is one more {{FIRST_NAME}} has to approve deleting.** If there are more than 5, draft the 5 most time-sensitive and list the rest.
 
 ## Writing the draft
 
@@ -125,11 +127,11 @@ Background and the delete procedure: `Job Search/draft-audit.md`.
 
 ### Formatting
 
-🔴 **Use `<br><br>` between paragraphs in `htmlBody`. Never `<p>` tags, not even with inline margins.** Third-party clients strip every `<p>` and flatten the body into one `<div>`, taking the inline margin with it. **`<br><br>` is plain enough that nothing strips it.**
+🔴 **Wrap each paragraph in its own `<div>`, with an empty `<div><br></div>` between paragraphs. Never `<p>` tags.** This is exactly what Gmail web emits when you type, so the draft edits naturally there and Outlook adds no `<p>` margins to double the spacing. Full reasoning and history in `Prompts/reply-tone.md`.
 
 **Set both parameters and never let them disagree:**
 
-- `htmlBody` — paragraphs separated by `<br><br>`
+- `htmlBody` — `<div>Hi Name,</div><div><br></div><div>Paragraph.</div><div><br></div><div>Thanks,</div><div>{{FIRST_NAME}}</div>`
 - `body` — the same text with real blank lines between paragraphs (some clients render the plain-text alternative)
 
 **Write with air in it.** Short paragraphs, blank line between each.

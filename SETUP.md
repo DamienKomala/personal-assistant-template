@@ -131,13 +131,17 @@ node Tools/personalize.mjs                 # apply
 
 🔴 **Whatever you write there governs conversation only.** Drafted email takes its voice from `reply-tone.md`, and the skills say so explicitly.
 
+### `Data/application-answers.md` — form answers *(only if you use `/custom-apply`)*
+
+**The autofill source for application forms** — eligibility, EEO choices, salary rule, consents, the experience questions every ATS asks. **Fill in what you know; the skill stops and asks for anything missing and records your answer, so the file fills itself over the first dozen applications.** ⚠️ **It holds contact details and EEO choices — think before committing it filled in to a public repo.**
+
 ---
 
 ## 4. Create the Gmail labels
 
 **`/emailjobsearch` applies exactly one `Career/*` label per real opportunity.** Create the labels named in `Data/job-criteria.md` — either by hand in Gmail settings, or by asking Claude to `create_label` each one.
 
-**Also create a parent `Jobs` label**, which is what rejections and mined digests get filed under.
+**Also create a parent `Jobs` label**, which is what rejections and mined digests get filed under, **and a `Jobs/Rejections` sublabel** — confirmed rejections get both, so every company that answered sits in one place.
 
 ⚠️ **Confirm IDs with `list_labels` on every run rather than recording them.** **A stale ID applied automatically files a thread somewhere nobody will look for it.**
 

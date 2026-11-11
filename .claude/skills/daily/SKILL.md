@@ -42,6 +42,8 @@ The ask this exists to serve, in the source repo owner's words: *"Tasks on daily
 
 ⚠️ **When a sweep rewrites a carried-forward item, carry its anchor forward with the text.** Drop it and the item re-syncs as a new task while the old one is reported as an orphan. **Nothing is lost; it is just noise, and the orphan count in `--push` is where it shows up.**
 
+🆕 **THE MIRROR RULE — when an item is DEMOTED from a checkbox to a plain bullet, STRIP its anchor in the same edit.** **A checkbox means you can finish it and a finding is a plain bullet, so demotion is a normal and correct edit** — but **this tool builds its task list from checkboxes only**, so an anchor left behind on a bullet is invisible to it and shows up as an orphan on every push from then on. ⚠️ **A false orphan reads exactly like a real dropped anchor. That is the cost — not lost data, but a permanent warning that teaches you to skip the warnings.** ✅ **`--push` now reports these separately as "demoted, not dropped", and flags any anchor that appears on two checkboxes.** **Close the board task first if it is still open, then demote and strip.**
+
 `--anchor` writes missing anchors and does nothing else — **useful if you want the file stamped without touching ClickUp.**
 
 ## What it will not do

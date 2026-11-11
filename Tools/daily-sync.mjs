@@ -398,12 +398,64 @@ async function main() {
   // missing anchor is usually a sweep rewriting a line, not the owner dropping a job.
   const liveAnchors = new Set(tasks.map(t => t.anchor));
   const orphans = Object.entries(map).filter(([a]) => !liveAnchors.has(a));
-  if (orphans.length) {
+
+  // A DEMOTED item is not a dropped anchor, and conflating the two is the whole
+  // problem: `collect()` only ever sees `- [ ]` lines, so an anchor left behind
+  // on a plain bullet can never match and reports as an orphan on EVERY push,
+  // forever. Byte-identical in the output to a real drop — which trains you to
+  // skip the warning that matters. Found 2026-09-06 (a line demoted
+  // to a finding on 09-04, warning ever since, board task Closed since 09-01).
+  // So: scan the raw file for anchors NOT on a checkbox and name them for what
+  // they are. Reporting only — this tool still never deletes a task.
+  // A DUPLICATED anchor is worse than either orphan case: two checkboxes claim
+  // one board task, so `map[anchor]` resolves to whichever renders last and the
+  // other line is silently untracked — a tick coming back lands on the wrong
+  // one. It happens when a sweep carries an item into a new block by copying
+  // the line, anchor and all, without removing the old one. Found 2026-09-06.
+  const byAnchor = new Map();
+  for (const t of tasks) {
+    if (!byAnchor.has(t.anchor)) byAnchor.set(t.anchor, []);
+    byAnchor.get(t.anchor).push(t);
+  }
+  const dupes = [...byAnchor.entries()].filter(([, v]) => v.length > 1);
+  if (dupes.length) {
     say("");
-    say(`⚠️  ${orphans.length} tracked task(s) no longer have a matching anchor in Daily.md.`);
+    say(`🔴 ${dupes.length} anchor(s) appear on MORE THAN ONE checkbox — two lines claim one task.`);
+    say(`   Only one can win, so the other is untracked and a tick would land wrong.`);
+    for (const [a, v] of dupes) {
+      say(`   · <!--cu:${a}-->`);
+      v.forEach(t => say(`       line ${t.item.line + 1}  ${t.item.text.replace(/[*_`]/g, "").slice(0, 60)}`));
+    }
+    say(`   Fix by hand: decide which line is canonical, delete the anchor from the`);
+    say(`   other, and re-push — the survivor keeps the board task and its history.`);
+  }
+
+  const demoted = new Set();
+  readFileSync(DAILY_MD, "utf8").split("\n").forEach(line => {
+    if (CHECKBOX.test(line)) return;
+    const m = line.match(ANCHOR_RE);
+    if (m) demoted.add(m[1]);
+  });
+
+  const dropped = orphans.filter(([a]) => !demoted.has(a));
+  const stranded = orphans.filter(([a]) => demoted.has(a));
+
+  if (dropped.length) {
+    say("");
+    say(`⚠️  ${dropped.length} tracked task(s) no longer have a matching anchor in Daily.md.`);
     say(`   NOT deleted — usually a sweep rewrote the line and dropped its anchor.`);
-    orphans.slice(0, 8).forEach(([a, e]) => say(`   · ${(e.name || a).slice(0, 72)}`));
-    if (orphans.length > 8) say(`   … +${orphans.length - 8} more`);
+    dropped.slice(0, 8).forEach(([a, e]) => say(`   · ${(e.name || a).slice(0, 72)}`));
+    if (dropped.length > 8) say(`   … +${dropped.length - 8} more`);
+  }
+
+  if (stranded.length) {
+    say("");
+    say(`⚠️  ${stranded.length} anchor(s) sit on a PLAIN BULLET, not a checkbox — demoted, not dropped.`);
+    say(`   This tool reads checkboxes only, so these can never match and will`);
+    say(`   warn on every push until the anchor is removed from the line.`);
+    stranded.forEach(([a, e]) => say(`   · <!--cu:${a}--> ${(e.name || "").slice(0, 58)}`));
+    say(`   Fix: delete the anchor comment from that line. Close its board task first`);
+    say(`   if it is still open — a demoted finding leaves nothing here to tick it.`);
   }
 
   if (MODE === "dry") {

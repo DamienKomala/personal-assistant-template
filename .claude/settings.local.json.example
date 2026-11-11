@@ -3,6 +3,7 @@
   "permissions": {
     "allow": [
       "Bash(node Dashboards/build-data.mjs:*)",
+      "Bash(node Tools/sweep-brief.mjs:*)",
       "Bash(node Tools/clickup-sync.mjs --dry:*)",
       "Bash(node Tools/clickup-sync.mjs --pull:*)",
       "Bash(node Tools/daily-sync.mjs --dry:*)",
